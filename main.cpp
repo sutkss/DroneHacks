@@ -41,6 +41,12 @@ int main(int argc, char *argv[])
     std::cout << "***************************************\n" << std::endl;
 
 	Mat kao;
+	// 分類器の読み込み
+	std::string cascadeName = "haarcascade_frontalface_alt.xml"; // Haar-like
+	//std::string cascadeName = "./lbpcascade_frontalface.xml"; // LBP
+	cv::CascadeClassifier cascade;
+	if (!cascade.load(cascadeName))
+		return -1;
 
     while (1) {
         // Key input
@@ -58,13 +64,6 @@ int main(int argc, char *argv[])
 		//cv::resize(kao, smallkao, smallkao.size(), 0, 0, cv::INTER_LINEAR);
 		//cv::equalizeHist(smallkao, smallkao);
 		cv::equalizeHist(kao, kao);
-
-		// 分類器の読み込み
-		std::string cascadeName = "haarcascade_frontalface_alt.xml"; // Haar-like
-		//std::string cascadeName = "./lbpcascade_frontalface.xml"; // LBP
-		cv::CascadeClassifier cascade;
-		if (!cascade.load(cascadeName))
-			return -1;
 
 		std::vector<cv::Rect> faces;
 		// マルチスケール（顔）探索
@@ -100,23 +99,23 @@ int main(int argc, char *argv[])
 				radiusm = radius;
 
 				if (center.x < kao.size().width/ 3){
-					vr = 1.0;
+					vr = static_cast<double>(center.x) / static_cast<double>(kao.size().width / 3);
 				}
 				else if (center.x < kao.size().width * 2 / 3){
 					vr = 0.0;
 				}
 				else {
-					vr = -1.0;
+					vr = -static_cast<double>(center.x) / static_cast<double>(kao.size().width);
 				}
 
 				if (center.y < kao.size().height / 3){
-					vz = 1.0;
+					vz = static_cast<double>(center.y) / static_cast<double>(kao.size().height / 3);
 				}
 				else if (center.y < kao.size().height * 2 / 3){
 					vz = 0.0;
 				}
 				else {
-					vz = -1.0;
+					vz = -static_cast<double>(center.y) / static_cast<double>(kao.size().height);
 				}
 				std::cout << "center.x:" << center.x << std::endl;
 				std::cout << "center.y:" << center.y << std::endl;
@@ -127,7 +126,6 @@ int main(int argc, char *argv[])
 		//cv::namedWindow("result", CV_WINDOW_AUTOSIZE | CV_WINDOW_FREERATIO);
 		//cv::imshow("result", kao);
 
-		if (waitKey(30) >= 0) break;
         // Take off / Landing 
         if (key == ' ') {
             if (ardrone.onGround()) ardrone.takeoff();
@@ -135,14 +133,14 @@ int main(int argc, char *argv[])
         }
 
         
-		/*
+		
         if (key == 0x260000) vx = 1.0;
         if (key == 0x280000) vx = -1.0;
         if (key == 0x250000) vr = 1.0;
         if (key == 0x270000) vr = -1.0;
         if (key == 'q')      vz = 1.0;
         if (key == 'a')      vz = -1.0;
-        */
+        
 		ardrone.move3D(vx, vy, vz, vr);
 		std::cout << "vr:" << vr << std::endl;
 		std::cout << "vz:" << vz << std::endl;
