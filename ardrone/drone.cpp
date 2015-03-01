@@ -8,6 +8,7 @@ Drone::Drone(){
 	vr = 0.0;
 };
 
+/*ドローンとの接続に成功したらtrue,そうでなければfalseを返す*/
 bool Drone::initialization(){
 	if (!open()){
 		return false;
@@ -40,6 +41,7 @@ bool Drone::initialization(){
 	return true;
 }
 
+/*Escキーが押されて終了したいときに-1を返す、そうでなければ0を返す*/
 int Drone::default_move(){
 	int key = cv::waitKey(33);
 	if (key == 0x1b) return -1;
@@ -65,6 +67,7 @@ int Drone::default_move(){
 	return 0;
 }
 
+/*引数で渡されたパラメータに設定する*/
 void Drone::setParameters(double _vx, double _vy, double _vz, double _vr){
 	vx = _vx;
 	vy = _vy;
