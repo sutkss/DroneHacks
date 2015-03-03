@@ -57,13 +57,14 @@ int Drone::default_move(){
 
 	// Move
 	double vx = 0.0, vy = 0.0, vz = 0.0, vr = 0.0;
-	if (key == 0x260000) vx = 1.0;
-	if (key == 0x280000) vx = -1.0;
+	if (key == 0x260000) vx = 0.2;
+	if (key == 0x280000) vx = -0.2;
 	if (key == 0x250000) vr = 1.0;
 	if (key == 0x270000) vr = -1.0;
 	if (key == 'q')      vz = 1.0;
 	if (key == 'a')      vz = -1.0;
 
+	move3D(vx, vy, vz, vr);
 	// Change camera
 	static int mode = 0;
 	if (key == 'c') setCamera(++mode % 4);

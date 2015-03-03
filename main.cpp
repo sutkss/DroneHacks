@@ -12,7 +12,7 @@ using namespace std;
 // --------------------------------------------------------------------------
 
 //DRONE use => 1, not => 0
-#define USE_DRONE 0
+#define USE_DRONE 1
 
 Drone ardrone;
 ImageProcess ImgProc;
@@ -20,7 +20,7 @@ ImageProcess ImgProc;
 //初期化処理
 void InitProcess(){
 	if(USE_DRONE) ardrone.initialization();
-	else ImgProc.useVideoCapture();
+	ImgProc.useVideoCapture();
 }
 
 //ドローンと接続されていたらドローンから、
@@ -56,10 +56,10 @@ int main(int argc, char *argv[])
 		//オプティカルフロー
 		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		//顔検出
-		//cv::Mat processed_image = ImgProc.FaceDetection(curr_img);
-		//cv::Mat processed_image = ImgProc.Labeling(curr_img);
-		//cv::Mat processed_image = ImgProc.CircleDetection(curr_img);
-		cv::Mat processed_image = ImgProc.LineDetection(curr_img);
+		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
+		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
+		cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
+		cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
 		/*制御部分*/
 		/*
 			.......
@@ -76,10 +76,13 @@ int main(int argc, char *argv[])
 				break;
 		}
 		//ardroneのパラメータの方向に動く
-		ardrone.Move();
+		//ardrone.Move();
 
 		// Display the image
-		cv::imshow("processed_image", processed_image);
+		//cv::imshow("processed_image1", processed_image1);
+		//cv::imshow("processed_image2", processed_image2);
+		cv::imshow("processed_image3", processed_image3);
+		cv::imshow("processed_image4", processed_image4);
 		prev_img = curr_img;
 		if (!ardrone.getAvailable()){
 			if (waitKey(30) >= 0) break;

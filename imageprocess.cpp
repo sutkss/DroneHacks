@@ -129,7 +129,6 @@ cv::Mat ImageProcess::CircleDetection(cv::Mat image){
 
 	double x, y;// 円の中心座標
 
-	cap >> image; // カメラから新しいフレームを取得
 	cvtColor(image, gray_img, CV_BGR2GRAY);
 	cvtColor(image, cmp_img, CV_BGR2GRAY);
 	// エッジ検出
