@@ -6,11 +6,13 @@ Drone::Drone(){
 	vy = 0.0;
 	vz = 0.0;
 	vr = 0.0;
+	available = false;
 };
 
 /*ƒhƒ[ƒ“‚Æ‚ÌÚ‘±‚É¬Œ÷‚µ‚½‚çtrue,‚»‚¤‚Å‚È‚¯‚ê‚Îfalse‚ğ•Ô‚·*/
 bool Drone::initialization(){
 	if (!open()){
+		available = false;
 		return false;
 	}
 	else{
@@ -38,6 +40,7 @@ bool Drone::initialization(){
 		std::cout << "*                                     *" << std::endl;
 		std::cout << "***************************************\n" << std::endl;
 	}
+	available = true;
 	return true;
 }
 

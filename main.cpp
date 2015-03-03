@@ -1,31 +1,59 @@
 #include "ardrone/ardrone.h"
 #include "ardrone/drone.h"
+#include "imageprocess.h"
 #include <ctime>
-
+#include <iostream>
+using namespace std;
 // --------------------------------------------------------------------------
 // main(Number of arguments, Argument values)
 // Description  : This is the entry point of the program.
 // Return value : SUCCESS:0  ERROR:-1
 // --------------------------------------------------------------------------
 
+//DRONE use => 1, not => 0
+#define USE_DRONE 0
+
+Drone ardrone;
+ImageProcess ImgProc;
+
+//初期化処理
+void InitProcess(){
+	if(USE_DRONE)ardrone.initialization();
+	std::cout << ImgProc.useVideoCapture() << endl;
+	ImgProc.getVideoCapture();
+}
+
+//ドローンと接続されていたらドローンから、
+//ビデオキャプチャが取得できればキャプチャを返す
+cv::Mat getImage(){
+	if (ardrone.getAvailable()){
+		return ardrone.getImage();
+	}
+	else if(ImgProc.cap.isOpened()){
+		return ImgProc.getVideoCapture();
+	}
+	else{
+		return cv::Mat();
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	// AR.Drone class
-	Drone ardrone;
-	if (!ardrone.initialization())
-		return -1;
-	// Image of AR.Drone's camera
-	cv::Mat image = ardrone.getImage();
+	using namespace cv;
+	InitProcess();
+
+	cv::Mat prev_img = getImage();
+	cv::Mat curr_img = getImage();
 	double vx, vy, vz, vr;
 	while (1) {
 		//ループごとにdroneの画像を取得
-		image = ardrone.getImage();
+		curr_img = getImage();
 
 		/*画像処理の部分*/
 		/*
 			.......
 		*/
-
+		cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		/*制御部分*/
 		/*
 			.......
@@ -37,17 +65,20 @@ int main(int argc, char *argv[])
 		*/
 
 		//defaultの動きをする
-		if (ardrone.default_move() == -1)
-			break;
-
+		if (ardrone.getAvailable()){
+			if (ardrone.default_move() == -1)
+				break;
+		}
 		//ardroneのパラメータの方向に動く
 		ardrone.Move();
 
 		// Display the image
-		cv::imshow("camera", image);
+		cv::imshow("processed_image", processed_image);
+		prev_img = curr_img;
+		if (!ardrone.getAvailable()){
+			if (waitKey(30) >= 0) break;
+		}
 	}
-	// See you
-	ardrone.close();
 
 	return 0;
 }

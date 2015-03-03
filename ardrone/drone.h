@@ -7,7 +7,8 @@ private:
 	double vy;
 	double vz;
 	double vr;
-
+	//Droneのリソースが利用可能かどうか
+	bool available;
 public:
 	/*パラメータ初期化*/
 	Drone();
@@ -24,5 +25,11 @@ public:
 	double getvr(){ return vr; }
 	/*パラメータの方向に動く*/
 	void Move();
-
+	bool getAvailable(){
+		return available;
+	}
+	~Drone(){
+		if (available)
+			close();
+	}
 };
