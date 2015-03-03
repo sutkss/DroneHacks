@@ -4,6 +4,7 @@
 #include <ctime>
 #include <iostream>
 using namespace std;
+
 // --------------------------------------------------------------------------
 // main(Number of arguments, Argument values)
 // Description  : This is the entry point of the program.
@@ -56,7 +57,9 @@ int main(int argc, char *argv[])
 		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		//ŠçŒŸo
 		//cv::Mat processed_image = ImgProc.FaceDetection(curr_img);
-		cv::Mat processed_image = ImgProc.Labeling(curr_img);
+		//cv::Mat processed_image = ImgProc.Labeling(curr_img);
+		//cv::Mat processed_image = ImgProc.CircleDetection(curr_img);
+		cv::Mat processed_image = ImgProc.LineDetection(curr_img);
 		/*§Œä•”•ª*/
 		/*
 			.......
