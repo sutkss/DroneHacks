@@ -12,4 +12,5 @@ public:
 	//opticalFlow
 	cv::Mat OpticalFlow(cv::Mat prev, cv::Mat curr);
 	cv::Mat FaceDetection(cv::Mat image);
+	cv::Mat Labeling(cv::Mat image);
 };

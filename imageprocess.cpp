@@ -1,5 +1,9 @@
 #include "ardrone\ardrone.h"
 #include "imageprocess.h"
+#include "Labeling.h"
+
+#include <iostream>
+using namespace std;
 
 int ImageProcess::useVideoCapture(){
 	cap.open(0);
@@ -99,4 +103,19 @@ cv::Mat ImageProcess::FaceDetection(cv::Mat image){
 		cv::circle(image, center, radius, cv::Scalar(80, 80, 255), 3, 8, 0);
 	}
 	return image;
+}
+
+cv::Mat ImageProcess::Labeling(cv::Mat image){
+	cv::Mat bin;
+	cv::cvtColor(image, bin, CV_BGR2GRAY);
+	cv::GaussianBlur(bin, bin, cv::Size(11, 11), 10, 10);
+	cv::threshold(bin, bin, 10, 255, cv::THRESH_BINARY);
+	cv::erode(bin, bin, cv::Mat(), cv::Point(-1, -1), 10);
+	cv::dilate(bin, bin, cv::Mat(), cv::Point(-1, -1), 5);
+	// Labeling‚ÌŒ‹‰Ê‚ðŽó‚¯Žæ‚é
+	cv::Mat label(image.size(), CV_16SC1);
+	LabelingBS labeling;
+	labeling.Exec(bin.data, (short *)label.data, bin.cols, bin.rows, false, 0);
+	cout << "Regions:" << labeling.GetNumOfRegions() << endl;
+	return bin;
 }

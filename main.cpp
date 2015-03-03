@@ -18,9 +18,8 @@ ImageProcess ImgProc;
 
 //初期化処理
 void InitProcess(){
-	if(USE_DRONE)ardrone.initialization();
-	std::cout << ImgProc.useVideoCapture() << endl;
-	ImgProc.getVideoCapture();
+	if(USE_DRONE) ardrone.initialization();
+	else ImgProc.useVideoCapture();
 }
 
 //ドローンと接続されていたらドローンから、
@@ -56,7 +55,8 @@ int main(int argc, char *argv[])
 		//オプティカルフロー
 		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		//顔検出
-		cv::Mat processed_image = ImgProc.FaceDetection(curr_img);
+		//cv::Mat processed_image = ImgProc.FaceDetection(curr_img);
+		cv::Mat processed_image = ImgProc.Labeling(curr_img);
 		/*制御部分*/
 		/*
 			.......
