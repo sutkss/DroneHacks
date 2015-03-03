@@ -53,7 +53,10 @@ int main(int argc, char *argv[])
 		/*
 			.......
 		*/
-		cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
+		//オプティカルフロー
+		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
+		//顔検出
+		cv::Mat processed_image = ImgProc.FaceDetection(curr_img);
 		/*制御部分*/
 		/*
 			.......
