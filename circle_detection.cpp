@@ -24,20 +24,25 @@ int main(int argc, char *argv[])
 	cap.set(CV_CAP_PROP_FPS, 30);
 	if (!cap.isOpened())  // 成功したかどうかをチェック
 		return -1;
-	// 円検出用画像
-	Mat gray_img;
-	// 円検出後比較用画像
-	Mat tmp_img;
-	Mat cmp_img;
 
 	for (;;)
 	{
-		Mat frame,frame2;
+		// 元の画像
+		Mat frame;
+		// 円検出用画像
+		Mat gray_img;
+		// 円検出後比較用画像
+		Mat tmp_img;
+		Mat cmp_img;
+
+		double x, y;// 円の中心座標
+
+		//Mat frame2;	// test用
 		cap >> frame; // カメラから新しいフレームを取得
 		cvtColor(frame, gray_img, CV_BGR2GRAY);
 		//cvtColor(frame, tmp_img, CV_BGR2GRAY);
 		cvtColor(frame, cmp_img, CV_BGR2GRAY);
-		cvtColor(frame, frame2, CV_BGR2GRAY);
+		//cvtColor(frame, frame2, CV_BGR2GRAY);
 		// エッジ検出
 		Canny(cmp_img, cmp_img, 50, 200);
 		cmp_img = ~cmp_img;
@@ -70,17 +75,20 @@ int main(int argc, char *argv[])
 				// エッジ検出
 			Canny(tmp_img, tmp_img, 50, 200);
 			tmp_img = ~tmp_img;
-			if (cv::matchShapes(tmp_img, cmp_img, CV_CONTOURS_MATCH_I2, 0) < min(epsilon,ep) ){
+			if (cv::matchShapes(tmp_img, cmp_img, CV_CONTOURS_MATCH_I2, 0) < ep ){
 				genuine_center = center;
 				genuine_radius = radius;
 				ep = cv::matchShapes(tmp_img, cmp_img, CV_CONTOURS_MATCH_I2, 0);
 			}
-
-
 		}
 		
+		// 円描画
 		cv::circle(frame, genuine_center, genuine_radius, cv::Scalar(0, 0, 255), 2);
+		// 円中心描画
 		cv::circle(frame, genuine_center, 0, cv::Scalar(0, 255, 0), 2);
+		
+		x = genuine_center.x;
+		y = genuine_center.y;
 
 		cv::imshow("circle", frame);
 		//cv::imshow("frame2", frame2);
