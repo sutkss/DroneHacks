@@ -3,7 +3,7 @@
 
 using namespace cv;
 
-#define epsilon 0.01
+#define epsilon 0.1
 #define delta 1.0
 // --------------------------------------------------------------------------
 // main(Number of arguments, Argument values)
@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
 		Mat gray_img;
 		// エッジ検出用画像
 		Mat edge_img;
+		// 二値化画像
+		Mat bin_img;
 		
 		// カメラから新しいフレームを取得
 		cap >> frame;
@@ -48,34 +50,45 @@ int main(int argc, char *argv[])
 		cvtColor(frame, gray_img, CV_BGR2GRAY);
 
 		// ヒストグラム平坦化
-		cv::equalizeHist(gray_img, gray_img);
+		// cv::equalizeHist(gray_img, gray_img);
+
+		// 二値化
+		threshold(gray_img, bin_img, 75, 255, THRESH_BINARY );
 
 		// エッジ検出
-		Canny(gray_img,edge_img,50,200,3);
+		Canny(bin_img,edge_img,50,200,3);
 		
 		// 古典的Hough変換
 		std::vector<cv::Vec2f> lines;
-		cv::HoughLines(edge_img,lines,1,CV_PI/180,200,0,0);
-	
+		cv::HoughLines(edge_img, lines, 1, CV_PI / 180, 200, 0, 0);
 		std::vector<cv::Vec2f>::iterator it = lines.begin();
-		//std::vector<cv::Vec2f>::iterator it2 = lines.begin();
 		for(; it!=lines.end(); ++it) {
-			float rho1 = (*it)[0], theta1 = (*it)[1];
-			cv::Point pt1, pt2;
-			double a1 = cos(theta1), b1 = sin(theta1);
-			double x1 = a1*rho1, y1 = b1*rho1;
-			pt1.x = cv::saturate_cast<int>(x1 + 1000*(-b1));
-			pt1.y = cv::saturate_cast<int>(y1 + 1000*(a1));
-			pt2.x = cv::saturate_cast<int>(x1 - 1000*(-b1));
-			pt2.y = cv::saturate_cast<int>(y1 - 1000*(a1));
-			cv::line(frame, pt1, pt2, cv::Scalar(0,0,255), 3, CV_AA);
-			
-			
+		float rho1 = (*it)[0], theta1 = (*it)[1];
+		double a1 = cos(theta1), b1 = sin(theta1);
+		double x1 = a1*rho1, y1 = b1*rho1;
+		cv::Point pt1, pt2;
+		pt1.x = cv::saturate_cast<int>(x1 + 1000*(-b1));
+		pt1.y = cv::saturate_cast<int>(y1 + 1000*(a1));
+		pt2.x = cv::saturate_cast<int>(x1 - 1000*(-b1));
+		pt2.y = cv::saturate_cast<int>(y1 - 1000*(a1));
+		cv::line(frame, pt1, pt2, cv::Scalar(0, 0, 255), 3, CV_AA);
 		}
 		
+
+		// 確率的Hough変換
+		/*
+		std::vector<cv::Vec4i> lines;
+		cv::HoughLinesP(edge_img,lines,1,CV_PI/180,200,0,100);
+	
+		for (size_t i = 0; i < lines.size(); i++){
+			line(frame, cv::Point(lines[i][0], lines[i][1]), cv::Point(lines[i][2], lines[i][3]), cv::Scalar(0, 0, 255), 3, 8);
+		}
+		*/
+		
 		cv::imshow("frame",frame);
-		//cv::imshow("モノクロ", gray_img);
-		//cv::imshow("edge", edge_img);
+		cv::imshow("binary", bin_img);
+		cv::imshow("モノクロ", gray_img);
+		cv::imshow("edge", edge_img);
 		if (waitKey(30) >= 0) break;
 	}
 
