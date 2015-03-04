@@ -15,4 +15,5 @@ public:
 	cv::Mat Labeling(cv::Mat image);
 	cv::Mat CircleDetection(cv::Mat image);
 	cv::Mat LineDetection(cv::Mat image);
+	cv::Point2f getPosCircleDetection(cv::Mat image);
 };

@@ -25,7 +25,9 @@ cv::Mat ImageProcess::getVideoCapture(){
 }
 
 //opticalFlow
-cv::Mat ImageProcess::OpticalFlow(cv::Mat prev, cv::Mat curr){
+cv::Mat ImageProcess::OpticalFlow(cv::Mat _prev, cv::Mat _curr){
+	cv::Mat prev = _prev.clone();
+	cv::Mat curr = _curr.clone();
 	cv::cvtColor(prev, prev, CV_BGR2GRAY);
 	cv::cvtColor(curr, curr, CV_BGR2GRAY);
 
@@ -62,7 +64,8 @@ cv::Mat ImageProcess::OpticalFlow(cv::Mat prev, cv::Mat curr){
 	return optflow;
 }
 
-cv::Mat ImageProcess::FaceDetection(cv::Mat image){
+cv::Mat ImageProcess::FaceDetection(cv::Mat _image){
+	cv::Mat image = _image.clone();
 	double scale = 4.0;
 	cv::cvtColor(image, image, CV_BGR2GRAY);
 
@@ -105,7 +108,8 @@ cv::Mat ImageProcess::FaceDetection(cv::Mat image){
 	return image;
 }
 
-cv::Mat ImageProcess::Labeling(cv::Mat image){
+cv::Mat ImageProcess::Labeling(cv::Mat _image){
+	cv::Mat image = _image.clone();
 	cv::Mat bin;
 	cv::cvtColor(image, bin, CV_BGR2GRAY);
 	cv::GaussianBlur(bin, bin, cv::Size(11, 11), 10, 10);
@@ -120,7 +124,8 @@ cv::Mat ImageProcess::Labeling(cv::Mat image){
 	return bin;
 }
 
-cv::Mat ImageProcess::CircleDetection(cv::Mat image){
+cv::Mat ImageProcess::CircleDetection(cv::Mat _image){
+	cv::Mat image = _image.clone();
 	// 円検出用画像
 	cv::Mat gray_img;
 	// 円検出後比較用画像
@@ -178,7 +183,8 @@ cv::Mat ImageProcess::CircleDetection(cv::Mat image){
 	return image;
 }
 
-cv::Mat ImageProcess::LineDetection(cv::Mat image){
+cv::Mat ImageProcess::LineDetection(cv::Mat _image){
+	cv::Mat image = _image.clone();
 	cv::Mat gray_img;
 	// エッジ検出用画像
 	cv::Mat edge_img;
@@ -213,4 +219,63 @@ cv::Mat ImageProcess::LineDetection(cv::Mat image){
 		cv::line(image, pt1, pt2, cv::Scalar(0, 0, 255), 3, CV_AA);
 	}
 	return image;
+}
+
+cv::Point2f ImageProcess::getPosCircleDetection(cv::Mat _image){
+	cv::Mat image = _image.clone();
+	// 円検出用画像
+	cv::Mat gray_img;
+	// 円検出後比較用画像
+	cv::Mat tmp_img;
+	cv::Mat cmp_img;
+
+	double x, y;// 円の中心座標
+
+	cvtColor(image, gray_img, CV_BGR2GRAY);
+	cvtColor(image, cmp_img, CV_BGR2GRAY);
+	// エッジ検出
+	Canny(cmp_img, cmp_img, 50, 200);
+	cmp_img = ~cmp_img;
+
+	// ヒストグラム平坦化
+	cv::equalizeHist(gray_img, gray_img);
+
+	// 平滑化
+	cv::GaussianBlur(gray_img, gray_img, cv::Size(11, 11), 11, 11);
+
+	// 円検出
+	std::vector<cv::Vec3f> circles;
+	cv::HoughCircles(gray_img, circles, CV_HOUGH_GRADIENT, 1, 100, 100, 50);
+	cv::Point center;
+	cv::Point genuine_center;
+	int radius;
+	int genuine_radius = 0;
+	std::vector<cv::Vec3f>::iterator it = circles.begin();
+	double ep = 100.0;
+	for (; it != circles.end(); ++it) {
+		radius = cv::saturate_cast<int>((*it)[2]);
+		center = cv::Point(cv::saturate_cast<int>((*it)[0]), cv::saturate_cast<int>((*it)[1]));
+
+		// 円検出後に比較
+		cvtColor(image, tmp_img, CV_BGR2GRAY);
+		cv::circle(tmp_img, center, radius, cv::Scalar(0, 0, 0), 2);
+		// エッジ検出
+		Canny(tmp_img, tmp_img, 50, 200);
+		tmp_img = ~tmp_img;
+		if (cv::matchShapes(tmp_img, cmp_img, CV_CONTOURS_MATCH_I2, 0) < ep){
+			genuine_center = center;
+			genuine_radius = radius;
+			ep = cv::matchShapes(tmp_img, cmp_img, CV_CONTOURS_MATCH_I2, 0);
+		}
+	}
+
+	// 円描画
+	cv::circle(image, genuine_center, genuine_radius, cv::Scalar(0, 0, 255), 2);
+	// 円中心描画
+	cv::circle(image, genuine_center, 0, cv::Scalar(0, 255, 0), 2);
+
+	x = genuine_center.x;
+	y = genuine_center.y;
+
+	return cv::Point2f(x,y);
 }
