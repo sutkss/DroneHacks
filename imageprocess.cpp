@@ -80,7 +80,7 @@ cv::Mat ImageProcess::OpticalFlow(cv::Mat _prev, cv::Mat _curr){
 	std::vector<cv::Point2f> curr_pts;
 
 	// ‰Šú‰»
-	cv::Size flowSize(10, 10);
+	cv::Size flowSize(30, 30);
 	cv::Point2f center = cv::Point(prev.cols / 2., prev.rows / 2.);
 	for (int i = 0; i<flowSize.width; ++i) {
 		for (int j = 0; j<flowSize.width; ++j) {
@@ -108,17 +108,21 @@ cv::Mat ImageProcess::OpticalFlow(cv::Mat _prev, cv::Mat _curr){
 			velocity.push_back(dist);
 	}
 	Kmeans2(velocity, prev_pts, clastering);
-	std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
-	std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
-	for (; it != clastering[0].end(); ++it, ++pt){
-		cv::line(optflow, *pt, *pt+*it, cv::Scalar(255, 255, 255), 2);
-	}/*
-	std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
-	std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
-	for (; it != clastering[0].end(); ++itt, ++ptt){
-		cv::line(optflow, *ptt, *ptt + *itt, cv::Scalar(0, 0, 0), 2);
-	}*/
-
+	//–ÊÏ”ä‚ğ—p‚¢‚Ä•¨‘Ì•ª—£
+	if (clastering[0].size() < clastering[2].size()){
+		std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
+		std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
+		for (; it != clastering[0].end(); ++it, ++pt){
+			cv::line(optflow, *pt, *pt + *it, cv::Scalar(255, 255, 255), 2);
+		}
+	}
+	else{
+		std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
+		std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
+		for (; itt != clastering[2].end(); ++itt, ++ptt){
+			cv::line(optflow, *ptt, *ptt + *itt, cv::Scalar(255, 255, 255), 2);
+		}
+	}
 	return optflow;
 }
 
