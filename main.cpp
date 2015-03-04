@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
 	cv::Mat prev_img = getImage();
 	cv::Mat curr_img = getImage();
 
+	double vx=0.0, vy=0.0, vz=0.0, vr=0.0;
 	while (1) {
 		//ループごとにdroneの画像を取得
 		curr_img = getImage();
@@ -68,7 +69,9 @@ int main(int argc, char *argv[])
 		BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection);
 
 		//ardroneの速度パラメータ変更
-		ardrone.setParameters(BrackCircleCar.x, BrackCircleCar.y, 0, 0);
+		vx = -BrackCircleCar.x / (2*(BrackCircleCar.x + BrackCircleCar.y));
+		vy = -BrackCircleCar.y / (2*(BrackCircleCar.x + BrackCircleCar.y));
+		ardrone.setParameters(vx, vy, vz, vr);
 		
 
 		//defaultの動きをする
