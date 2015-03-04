@@ -341,3 +341,64 @@ cv::Point2f ImageProcess::getPosCircleDetection(cv::Mat _image){
 
 	return cv::Point2f(x,y);
 }
+
+cv::Point2f ImageProcess::getVelocityOpticalFlow(cv::Mat _prev, cv::Mat _curr){
+	cv::Mat prev = _prev.clone();
+	cv::Mat curr = _curr.clone();
+	cv::cvtColor(prev, prev, CV_BGR2GRAY);
+	cv::cvtColor(curr, curr, CV_BGR2GRAY);
+
+	std::vector<cv::Point2f> prev_pts;
+	std::vector<cv::Point2f> curr_pts;
+
+	// 初期化
+	cv::Size flowSize(30, 30);
+	cv::Point2f center = cv::Point(prev.cols / 2., prev.rows / 2.);
+	for (int i = 0; i<flowSize.width; ++i) {
+		for (int j = 0; j<flowSize.width; ++j) {
+			cv::Point2f p(i*float(prev.cols) / (flowSize.width - 1),
+				j*float(prev.rows) / (flowSize.height - 1));
+			prev_pts.push_back((p - center)*0.9f + center);
+		}
+	}
+
+	// Lucas-Kanadeメソッド＋画像ピラミッドに基づくオプティカルフロー
+	cv::Mat status, error;
+	cv::calcOpticalFlowPyrLK(prev, curr, prev_pts, curr_pts, status, error);
+
+	// オプティカルフローの表示
+	cv::Mat optflow;
+	optflow = curr.clone();
+	std::vector<cv::Point2f>::const_iterator p = prev_pts.begin();
+	std::vector<cv::Point2f>::const_iterator n = curr_pts.begin();
+	std::vector<cv::Point2f> velocity;
+	std::list<cv::Point2f> clastering[4];
+	for (; n != curr_pts.end(); ++n, ++p) {
+		cv::Point2f dist = *p - *n;
+		//移動距離が著しい点は除外する
+		if (dist.ddot(dist) < 5000)
+			velocity.push_back(dist);
+	}
+	Kmeans2(velocity, prev_pts, clastering);
+	//面積比を用いて物体分離
+	if (clastering[0].size() < clastering[2].size()){
+		std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
+		std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
+		for (; it != clastering[0].end(); ++it, ++pt){
+			cv::line(optflow, *pt, *pt + *it, cv::Scalar(255, 255, 255), 2);
+		}
+		imshow("optflow", optflow);
+		std::cout << calcCenter(clastering[0]) << endl;
+		return calcCenter(clastering[0]);
+	}
+	else{
+		std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
+		std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
+		for (; itt != clastering[2].end(); ++itt, ++ptt){
+			cv::line(optflow, *ptt, *ptt + *itt, cv::Scalar(255, 255, 255), 2);
+		}
+		imshow("optflow", optflow);
+		std::cout << calcCenter(clastering[2]) << endl;
+		return calcCenter(clastering[2]);
+	}
+}

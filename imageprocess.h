@@ -10,10 +10,11 @@ public:
 	int useVideoCapture();
 	cv::Mat getVideoCapture();
 	//opticalFlow
-	cv::Mat OpticalFlow(cv::Mat prev, cv::Mat curr);
-	cv::Mat FaceDetection(cv::Mat image);
-	cv::Mat Labeling(cv::Mat image);
-	cv::Mat CircleDetection(cv::Mat image);
-	cv::Mat LineDetection(cv::Mat image);
-	cv::Point2f getPosCircleDetection(cv::Mat image);
+	cv::Mat OpticalFlow(cv::Mat _prev, cv::Mat _curr);
+	cv::Mat FaceDetection(cv::Mat _image);
+	cv::Mat Labeling(cv::Mat _image);
+	cv::Mat CircleDetection(cv::Mat _image);
+	cv::Mat LineDetection(cv::Mat _image);
+	cv::Point2f getPosCircleDetection(cv::Mat _image);
+	cv::Point2f getVelocityOpticalFlow(cv::Mat _prev, cv::Mat _curr);
 };

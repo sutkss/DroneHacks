@@ -10,6 +10,6 @@ public:
 	double vx, vy;
 	Car();
 	void calcPosition(cv::Point2f p);
-	void calcVelocity();
+	void calcVelocity(cv::Point2f p);
 	void Move();
 };

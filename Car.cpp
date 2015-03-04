@@ -11,8 +11,9 @@ void Car::calcPosition(cv::Point2f p){
 	x = p.x;
 	y = p.y;
 }
-void Car::calcVelocity(){
-
+void Car::calcVelocity(cv::Point2f p){
+	vx = p.x;
+	vy = p.y;
 }
 void Car::Move(){
 
