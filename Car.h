@@ -1,3 +1,5 @@
+#pragma once
+#include "imageprocess.h"
 class Car{
 public:
 	//パラメータは２次元の現在位置、速度

@@ -55,18 +55,18 @@ int main(int argc, char *argv[])
 		/*画像処理の部分*/
 
 		//オプティカルフロー
-		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
+		cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		//顔検出
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
-		cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
-		cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
+		//cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
+		//cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
 
 		/*制御部分*/
 		/*
 			.......
 		*/
-		BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection);
+		BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
 
 		//ardroneの速度パラメータ変更
 		vx = -BrackCircleCar.x / (2*(BrackCircleCar.x + BrackCircleCar.y));
@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 		//ardrone.Move();
 
 		// Display the image
+		cv::imshow("processed_image", processed_image);
 		//cv::imshow("processed_image1", processed_image1);
 		//cv::imshow("processed_image2", processed_image2);
 		//cv::imshow("processed_image3", processed_image3);

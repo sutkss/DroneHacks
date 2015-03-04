@@ -1,4 +1,4 @@
-#include "ardrone\ardrone.h"
+#include <opencv2/opencv.hpp>
 #include "imageprocess.h"
 #include "Labeling.h"
 
@@ -24,6 +24,51 @@ cv::Mat ImageProcess::getVideoCapture(){
 	return tmp_img;
 }
 
+float vector_distance(cv::Point2f p1, cv::Point2f p2){
+	return (p1 - p2).ddot(p1 - p2);
+}
+cv::Point2f calcCenter(std::list<cv::Point2f> data){
+	float x = 0.0;
+	float y = 0.0;
+	std::list<cv::Point2f>::const_iterator it = data.begin();
+	for (; it != data.end(); ++it) {
+		x += it->x;
+		y += it->y;
+	}
+	return cv::Point2f(x / static_cast<float>(data.size()), y / static_cast<float>(data.size()));
+}
+
+void Kmeans2(std::vector<cv::Point2f> data, std::vector<cv::Point2f> points, std::list<cv::Point2f> *ret){
+	cv::Point2f center1 = data[0];
+	cv::Point2f center2 = data[1];
+	for (int i = 0; i < 20; i++){
+		ret[0].clear();
+		ret[1].clear();
+		ret[2].clear();
+		ret[3].clear();
+		std::vector<cv::Point2f>::const_iterator it = data.begin();
+		std::vector<cv::Point2f>::const_iterator pt = points.begin();
+		for (; it != data.end(); ++it, ++pt){
+			float dist = vector_distance(center1, *it);
+			if (dist < vector_distance(center2, *it)){
+				ret[0].push_back(*it);
+				ret[1].push_back(*pt);
+			}
+			else{
+				ret[2].push_back(*it);
+				ret[3].push_back(*pt);
+			}
+		}
+		center1 = calcCenter(ret[0]);
+		center2 = calcCenter(ret[2]);
+	}
+	/*std::list<cv::Point2f>::const_iterator it = ret[0].begin();
+	std::list<cv::Point2f>::const_iterator pt = ret[1].begin();
+	for (; it != ret[0].end(); ++it, ++pt){
+		std::cout << *pt << endl;
+	}*/
+}
+
 //opticalFlow
 cv::Mat ImageProcess::OpticalFlow(cv::Mat _prev, cv::Mat _curr){
 	cv::Mat prev = _prev.clone();
@@ -35,7 +80,7 @@ cv::Mat ImageProcess::OpticalFlow(cv::Mat _prev, cv::Mat _curr){
 	std::vector<cv::Point2f> curr_pts;
 
 	// ‰Šú‰»
-	cv::Size flowSize(30, 30);
+	cv::Size flowSize(10, 10);
 	cv::Point2f center = cv::Point(prev.cols / 2., prev.rows / 2.);
 	for (int i = 0; i<flowSize.width; ++i) {
 		for (int j = 0; j<flowSize.width; ++j) {
@@ -54,12 +99,25 @@ cv::Mat ImageProcess::OpticalFlow(cv::Mat _prev, cv::Mat _curr){
 	optflow = curr.clone();
 	std::vector<cv::Point2f>::const_iterator p = prev_pts.begin();
 	std::vector<cv::Point2f>::const_iterator n = curr_pts.begin();
+	std::vector<cv::Point2f> velocity;
+	std::list<cv::Point2f> clastering[4];
 	for (; n != curr_pts.end(); ++n, ++p) {
 		cv::Point2f dist = *p - *n;
 		//ˆÚ“®‹——£‚ª’˜‚µ‚¢“_‚ÍœŠO‚·‚é
 		if (dist.ddot(dist) < 5000)
-			cv::line(optflow, *p, *n, cv::Scalar(150, 0, 0), 2);
+			velocity.push_back(dist);
 	}
+	Kmeans2(velocity, prev_pts, clastering);
+	std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
+	std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
+	for (; it != clastering[0].end(); ++it, ++pt){
+		cv::line(optflow, *pt, *pt+*it, cv::Scalar(255, 255, 255), 2);
+	}/*
+	std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
+	std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
+	for (; it != clastering[0].end(); ++itt, ++ptt){
+		cv::line(optflow, *ptt, *ptt + *itt, cv::Scalar(0, 0, 0), 2);
+	}*/
 
 	return optflow;
 }
