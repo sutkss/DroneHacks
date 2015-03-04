@@ -1,6 +1,7 @@
 #include "ardrone/ardrone.h"
 #include "ardrone/drone.h"
 #include "imageprocess.h"
+#include "Car.h"
 #include <ctime>
 #include <iostream>
 using namespace std;
@@ -12,10 +13,11 @@ using namespace std;
 // --------------------------------------------------------------------------
 
 //DRONE use => 1, not => 0
-#define USE_DRONE 1
+#define USE_DRONE 0
 
 Drone ardrone;
 ImageProcess ImgProc;
+Car BrackCircleCar;
 
 //初期化処理
 void InitProcess(){
@@ -44,15 +46,13 @@ int main(int argc, char *argv[])
 
 	cv::Mat prev_img = getImage();
 	cv::Mat curr_img = getImage();
-	double vx, vy, vz, vr;
+
 	while (1) {
 		//ループごとにdroneの画像を取得
 		curr_img = getImage();
 
 		/*画像処理の部分*/
-		/*
-			.......
-		*/
+
 		//オプティカルフロー
 		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		//顔検出
@@ -60,15 +60,16 @@ int main(int argc, char *argv[])
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
 		cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
 		cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
+
 		/*制御部分*/
 		/*
 			.......
 		*/
+		BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection);
 
 		//ardroneの速度パラメータ変更
-		/*
-		ardrone.setParameters(vx, vy, vz, vr);
-		*/
+		ardrone.setParameters(BrackCircleCar.x, BrackCircleCar.y, 0, 0);
+		
 
 		//defaultの動きをする
 		if (ardrone.getAvailable()){
@@ -81,8 +82,8 @@ int main(int argc, char *argv[])
 		// Display the image
 		//cv::imshow("processed_image1", processed_image1);
 		//cv::imshow("processed_image2", processed_image2);
-		cv::imshow("processed_image3", processed_image3);
-		cv::imshow("processed_image4", processed_image4);
+		//cv::imshow("processed_image3", processed_image3);
+		//cv::imshow("processed_image4", processed_image4);
 		prev_img = curr_img;
 		if (!ardrone.getAvailable()){
 			if (waitKey(30) >= 0) break;
