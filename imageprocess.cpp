@@ -192,25 +192,19 @@ cv::Mat ImageProcess::LineDetection(cv::Mat image){
 	// cv::equalizeHist(gray_img, gray_img);
 
 	// 二値化
-	threshold(gray_img, bin_img, 75, 255, cv::THRESH_BINARY);
+	threshold(gray_img, bin_img, 25, 255, cv::THRESH_BINARY);
 
 	// エッジ検出
 	Canny(bin_img, edge_img, 50, 200, 3);
 
-	// 古典的Hough変換
-	std::vector<cv::Vec2f> lines;
-	cv::HoughLines(edge_img, lines, 1, CV_PI / 180, 200, 0, 0);
-	std::vector<cv::Vec2f>::iterator it = lines.begin();
-	for (; it != lines.end(); ++it) {
-		float rho1 = (*it)[0], theta1 = (*it)[1];
-		double a1 = cos(theta1), b1 = sin(theta1);
-		double x1 = a1*rho1, y1 = b1*rho1;
-		cv::Point pt1, pt2;
-		pt1.x = cv::saturate_cast<int>(x1 + 1000 * (-b1));
-		pt1.y = cv::saturate_cast<int>(y1 + 1000 * (a1));
-		pt2.x = cv::saturate_cast<int>(x1 - 1000 * (-b1));
-		pt2.y = cv::saturate_cast<int>(y1 - 1000 * (a1));
-		cv::line(image, pt1, pt2, cv::Scalar(0, 0, 255), 3, CV_AA);
+	// 確率的Hough変換
+	std::vector<cv::Vec4i> lines;
+	cv::HoughLinesP(edge_img, lines, 1, CV_PI / 180, 80, 30, 10);
+	for (size_t i = 0; i < lines.size(); i++)
+	{
+		cv::line(image, cv::Point(lines[i][0], lines[i][1]),
+			cv::Point(lines[i][2], lines[i][3]), cv::Scalar(0, 0, 255), 3, 8);
 	}
+
 	return image;
 }
