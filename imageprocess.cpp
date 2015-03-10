@@ -35,32 +35,56 @@ cv::Point2f calcCenter(std::list<cv::Point2f> data){
 		x += it->x;
 		y += it->y;
 	}
-	return cv::Point2f(x / static_cast<float>(data.size()), y / static_cast<float>(data.size()));
+	float ret_x = (data.size() == 0) ? 0 : x / static_cast<float>(data.size());
+	float ret_y = (data.size() == 0) ? 0 : y / static_cast<float>(data.size());
+	return cv::Point2f(ret_x, ret_y);
 }
 
+//完全分類じゃない。外乱は除くようにする
 void Kmeans2(std::vector<cv::Point2f> data, std::vector<cv::Point2f> points, std::list<cv::Point2f> *ret){
 	cv::Point2f center1 = data[0];
 	cv::Point2f center2 = data[1];
+	std::list<cv::Point2f> tmp[4];
 	for (int i = 0; i < 20; i++){
-		ret[0].clear();
-		ret[1].clear();
-		ret[2].clear();
-		ret[3].clear();
+		tmp[0].clear();
+		tmp[1].clear();
+		tmp[2].clear();
+		tmp[3].clear();
 		std::vector<cv::Point2f>::const_iterator it = data.begin();
 		std::vector<cv::Point2f>::const_iterator pt = points.begin();
 		for (; it != data.end(); ++it, ++pt){
 			float dist = vector_distance(center1, *it);
 			if (dist < vector_distance(center2, *it)){
-				ret[0].push_back(*it);
-				ret[1].push_back(*pt);
+				tmp[0].push_back(*it);
+				tmp[1].push_back(*pt);
 			}
 			else{
-				ret[2].push_back(*it);
-				ret[3].push_back(*pt);
+				tmp[2].push_back(*it);
+				tmp[3].push_back(*pt);
 			}
 		}
-		center1 = calcCenter(ret[0]);
-		center2 = calcCenter(ret[2]);
+		center1 = calcCenter(tmp[0]);
+		center2 = calcCenter(tmp[2]);
+	}
+
+	//外乱除去
+	std::list<cv::Point2f>::const_iterator it = tmp[0].begin();
+	std::list<cv::Point2f>::const_iterator pt = tmp[1].begin();
+	cv::Point2f pcenter1 = calcCenter(tmp[1]);
+	for (; it != tmp[0].end(); ++it, ++pt){
+		if (vector_distance(center1, *it) < 100 && vector_distance(pcenter1, *pt) < 5000){
+			ret[0].push_back(*it);
+			ret[1].push_back(*pt);
+		}
+	}
+	std::list<cv::Point2f>::const_iterator itt = tmp[2].begin();
+	std::list<cv::Point2f>::const_iterator ptt = tmp[3].begin();
+	cv::Point2f pcenter2 = calcCenter(tmp[3]);
+	for (; itt != tmp[2].end(); ++itt, ++ptt){
+		if (vector_distance(center1, *itt) < 100 && vector_distance(pcenter2, *ptt) < 5000){
+			ret[2].push_back(*itt);
+			ret[3].push_back(*ptt);
+		}
 	}
 	/*std::list<cv::Point2f>::const_iterator it = ret[0].begin();
 	std::list<cv::Point2f>::const_iterator pt = ret[1].begin();
@@ -348,6 +372,7 @@ cv::Point2f ImageProcess::getPosCircleDetection(cv::Mat _image){
 cv::Point2f ImageProcess::getVelocityOpticalFlow(cv::Mat _prev, cv::Mat _curr){
 	cv::Mat prev = _prev.clone();
 	cv::Mat curr = _curr.clone();
+	
 	cv::cvtColor(prev, prev, CV_BGR2GRAY);
 	cv::cvtColor(curr, curr, CV_BGR2GRAY);
 
@@ -355,10 +380,10 @@ cv::Point2f ImageProcess::getVelocityOpticalFlow(cv::Mat _prev, cv::Mat _curr){
 	std::vector<cv::Point2f> curr_pts;
 
 	// 初期化
-	cv::Size flowSize(30, 30);
+	cv::Size flowSize(40, 40);
 	cv::Point2f center = cv::Point(prev.cols / 2., prev.rows / 2.);
-	for (int i = 0; i<flowSize.width; ++i) {
-		for (int j = 0; j<flowSize.width; ++j) {
+	for (int i = 0; i < flowSize.width; ++i) {
+		for (int j = 0; j < flowSize.width; ++j) {
 			cv::Point2f p(i*float(prev.cols) / (flowSize.width - 1),
 				j*float(prev.rows) / (flowSize.height - 1));
 			prev_pts.push_back((p - center)*0.9f + center);
@@ -384,24 +409,29 @@ cv::Point2f ImageProcess::getVelocityOpticalFlow(cv::Mat _prev, cv::Mat _curr){
 	}
 	Kmeans2(velocity, prev_pts, clastering);
 	//面積比を用いて物体分離
+
 	if (clastering[0].size() < clastering[2].size()){
 		std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
 		std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
-		for (; it != clastering[0].end(); ++it, ++pt){
-			cv::line(optflow, *pt, *pt + *it, cv::Scalar(255, 255, 255), 2);
-		}
+		/*for (; it != clastering[0].end(); ++it, ++pt){
+			cv::line(optflow, *pt, *pt + *it*5, cv::Scalar(255, 255, 255), 2);
+		}*/
+		cerr << calcCenter(clastering[0]) << endl;
+		if (!(calcCenter(clastering[0]).x == 0 && calcCenter(clastering[0]).y))
+			cv::line(optflow, calcCenter(clastering[1]), 10 * calcCenter(clastering[0]) + calcCenter(clastering[1]), cv::Scalar(255, 255, 255), 5);
 		imshow("optflow", optflow);
-		std::cout << calcCenter(clastering[0]) << endl;
 		return calcCenter(clastering[0]);
 	}
 	else{
 		std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
 		std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
-		for (; itt != clastering[2].end(); ++itt, ++ptt){
-			cv::line(optflow, *ptt, *ptt + *itt, cv::Scalar(255, 255, 255), 2);
-		}
+		/*for (; itt != clastering[2].end(); ++itt, ++ptt){
+			cv::line(optflow, *ptt, *ptt + *itt*5, cv::Scalar(255, 255, 255), 2);
+		}*/
+		cerr << calcCenter(clastering[2]) << endl;
+		if (!(calcCenter(clastering[0]).x == 0 && calcCenter(clastering[0]).y))
+		cv::line(optflow, calcCenter(clastering[3]), 10 * calcCenter(clastering[2]) + calcCenter(clastering[3]), cv::Scalar(255, 255, 255), 5);
 		imshow("optflow", optflow);
-		std::cout << calcCenter(clastering[2]) << endl;
 		return calcCenter(clastering[2]);
 	}
 }

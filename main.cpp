@@ -4,6 +4,7 @@
 #include "Car.h"
 #include <ctime>
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 // --------------------------------------------------------------------------
@@ -19,10 +20,13 @@ Drone ardrone;
 ImageProcess ImgProc;
 Car BrackCircleCar;
 
+
+
 //初期化処理
 void InitProcess(){
 	if(USE_DRONE) ardrone.initialization();
 	ImgProc.useVideoCapture();
+
 }
 
 //ドローンと接続されていたらドローンから、
@@ -41,6 +45,10 @@ cv::Mat getImage(){
 
 int main(int argc, char *argv[])
 {
+	//debug用
+	ofstream ofs("debug.log");
+	std::cerr.rdbuf(ofs.rdbuf());
+
 	using namespace cv;
 	InitProcess();
 
@@ -55,7 +63,7 @@ int main(int argc, char *argv[])
 		/*画像処理の部分*/
 
 		//オプティカルフロー
-		cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
+		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		//顔検出
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
@@ -66,13 +74,13 @@ int main(int argc, char *argv[])
 		/*
 			.......
 		*/
-		cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
-		
+		//cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
+		ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
 		//BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
 		//BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//ardroneの速度パラメータ変更
 
-		ardrone.brain(pos, cv::Point2f(0,0), curr_img);
+		//ardrone.brain(pos, cv::Point2f(0,0), curr_img);
 		
 
 		//defaultの動きをする
@@ -87,7 +95,7 @@ int main(int argc, char *argv[])
 		//std::cout << vx << " " << vy << std::endl;
 		// Display the image
 		cv::imshow("image", curr_img);
-		cv::imshow("processed_image", processed_image);
+		//cv::imshow("processed_image", processed_image);
 		//cv::imshow("processed_image1", processed_image1);
 		//cv::imshow("processed_image2", processed_image2);
 		//cv::imshow("processed_image3", processed_image3);
