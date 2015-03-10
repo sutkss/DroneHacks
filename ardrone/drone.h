@@ -25,6 +25,7 @@ public:
 	double getvr(){ return vr; }
 	/*ƒpƒ‰ƒ[ƒ^‚Ì•ûŒü‚É“®‚­*/
 	void Move();
+	void brain(cv::Point2f pos, cv::Point2f v, cv::Mat img);
 	bool getAvailable(){
 		return available;
 	}

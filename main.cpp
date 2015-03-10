@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 		/*画像処理の部分*/
 
 		//オプティカルフロー
-		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
+		cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		//顔検出
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
@@ -66,12 +66,13 @@ int main(int argc, char *argv[])
 		/*
 			.......
 		*/
-		BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
-		BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
+		cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
+		
+		//BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
+		//BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//ardroneの速度パラメータ変更
-		vx = -BrackCircleCar.x / (2*(BrackCircleCar.x + BrackCircleCar.y));
-		vy = -BrackCircleCar.y / (2*(BrackCircleCar.x + BrackCircleCar.y));
-		ardrone.setParameters(vx, vy, vz, vr);
+
+		ardrone.brain(pos, cv::Point2f(0,0), curr_img);
 		
 
 		//defaultの動きをする
@@ -80,10 +81,13 @@ int main(int argc, char *argv[])
 				break;
 		}
 		//ardroneのパラメータの方向に動く
-		//ardrone.Move();
-
+		ardrone.Move();
+		//double vx, vy;
+		//ardrone.getVelocity(&vx, &vy);
+		//std::cout << vx << " " << vy << std::endl;
 		// Display the image
-		//cv::imshow("processed_image", processed_image);
+		cv::imshow("image", curr_img);
+		cv::imshow("processed_image", processed_image);
 		//cv::imshow("processed_image1", processed_image1);
 		//cv::imshow("processed_image2", processed_image2);
 		//cv::imshow("processed_image3", processed_image3);

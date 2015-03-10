@@ -56,15 +56,14 @@ int Drone::default_move(){
 	}
 
 	// Move
-	double vx = 0.0, vy = 0.0, vz = 0.0, vr = 0.0;
+	//double vx = 0.0, vy = 0.0, vz = 0.0, vr = 0.0;
 	if (key == 0x260000) vx = 0.2;
 	if (key == 0x280000) vx = -0.2;
-	if (key == 0x250000) vr = 1.0;
-	if (key == 0x270000) vr = -1.0;
-	if (key == 'q')      vz = 1.0;
-	if (key == 'a')      vz = -1.0;
+	if (key == 0x250000) vy = 0.2;
+	if (key == 0x270000) vy = -0.2;
+	if (key == 'q')      vz = 0.3;
+	if (key == 'a')      vz = -0.3;
 
-	move3D(vx, vy, vz, vr);
 	// Change camera
 	static int mode = 0;
 	if (key == 'c') setCamera(++mode % 4);
@@ -81,4 +80,28 @@ void Drone::setParameters(double _vx, double _vy, double _vz, double _vr){
 
 void Drone::Move(){
 	move3D(vx, vy, vz, vr);
+}
+
+void Drone::brain(cv::Point2f pos, cv::Point2f v, cv::Mat img){
+	double vx, vy, vr, vz;
+	vr = 0;
+	vz = 0;
+	getVelocity(&vx, &vy, &vz);
+	//‰~‚ª‚È‚©‚Á‚½
+	if (pos.x == -1 && pos.y == -1){
+		vx = 0;
+		vy = 0;
+	}
+	else{
+		//‰~‚ğŒ©‚Â‚¯‚½
+		//‰æ‘œ‚ÌÀ•WŒn‚ÆÀÛ‚Ìdrone‚ÌÀ•WŒn‚ğ•ÏŠ·
+		double target_y = -1 * (pos.x - img.cols / 2.0);
+		double target_x = -1 * (pos.y - img.rows / 2.0);
+
+		//drone‚Ì‘¬“xŒˆ’è‚·‚é
+		vx = target_x / (sqrt(img.rows*img.rows/4.0) * 5);
+		vy = target_y / (sqrt(img.cols*img.cols/4.0) * 5);
+	}
+	std::cout << vx << " " << vy << std::endl;
+	setParameters(vx, vy, 0.0, 0.0);
 }

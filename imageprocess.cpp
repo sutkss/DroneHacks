@@ -107,20 +107,22 @@ cv::Mat ImageProcess::OpticalFlow(cv::Mat _prev, cv::Mat _curr){
 		if (dist.ddot(dist) < 5000)
 			velocity.push_back(dist);
 	}
-	Kmeans2(velocity, prev_pts, clastering);
-	//ñ êœî‰ÇópÇ¢Çƒï®ëÃï™ó£
-	if (clastering[0].size() < clastering[2].size()){
-		std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
-		std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
-		for (; it != clastering[0].end(); ++it, ++pt){
-			cv::line(optflow, *pt, *pt + *it, cv::Scalar(255, 255, 255), 2);
+	if (!velocity.empty()){
+		Kmeans2(velocity, prev_pts, clastering);
+		//ñ êœî‰ÇópÇ¢Çƒï®ëÃï™ó£
+		if (clastering[0].size() < clastering[2].size()){
+			std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
+			std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
+			for (; it != clastering[0].end(); ++it, ++pt){
+				cv::line(optflow, *pt, *pt + *it, cv::Scalar(255, 255, 255), 2);
+			}
 		}
-	}
-	else{
-		std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
-		std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
-		for (; itt != clastering[2].end(); ++itt, ++ptt){
-			cv::line(optflow, *ptt, *ptt + *itt, cv::Scalar(255, 255, 255), 2);
+		else{
+			std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
+			std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
+			for (; itt != clastering[2].end(); ++itt, ++ptt){
+				cv::line(optflow, *ptt, *ptt + *itt, cv::Scalar(255, 255, 255), 2);
+			}
 		}
 	}
 	return optflow;
@@ -309,7 +311,7 @@ cv::Point2f ImageProcess::getPosCircleDetection(cv::Mat _image){
 	std::vector<cv::Vec3f> circles;
 	cv::HoughCircles(gray_img, circles, CV_HOUGH_GRADIENT, 1, 100, 100, 50);
 	cv::Point center;
-	cv::Point genuine_center;
+	cv::Point genuine_center = cv::Point(-1,-1);
 	int radius;
 	int genuine_radius = 0;
 	std::vector<cv::Vec3f>::iterator it = circles.begin();
@@ -339,6 +341,7 @@ cv::Point2f ImageProcess::getPosCircleDetection(cv::Mat _image){
 	x = genuine_center.x;
 	y = genuine_center.y;
 
+	imshow("circle", image);
 	return cv::Point2f(x,y);
 }
 
