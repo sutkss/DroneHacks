@@ -86,7 +86,6 @@ void Drone::brain(cv::Point2f pos, cv::Point2f v, cv::Mat img){
 	double vx, vy, vr, vz;
 	vr = 0;
 	vz = 0;
-	getVelocity(&vx, &vy, &vz);
 	//円がなかった
 	if (pos.x == -1 && pos.y == -1){
 		vx = 0;
@@ -99,9 +98,16 @@ void Drone::brain(cv::Point2f pos, cv::Point2f v, cv::Mat img){
 		double target_x = -1 * (pos.y - img.rows / 2.0);
 
 		//droneの速度決定する
+		//vx,vyは正規化された値で0.2をmaxとしている
 		vx = target_x / (sqrt(img.rows*img.rows/4.0) * 5);
 		vy = target_y / (sqrt(img.cols*img.cols/4.0) * 5);
 	}
-	std::cerr << vx << " " << vy << std::endl;
+	std::cout << vx << " " << vy << std::endl;
 	setParameters(vx, vy, 0.0, 0.0);
+
+	//センサーの値計測
+	//結果は.slnのあるディレクトリにdebug.logという名前で保存されるはず
+	double sensor_vx, sensor_vy, sensor_vz;
+	getVelocity(&sensor_vx, &sensor_vy, &sensor_vz);
+	std::cerr << sensor_vx << " " << sensor_vy << std::endl;
 }

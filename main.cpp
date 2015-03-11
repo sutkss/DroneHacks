@@ -14,7 +14,7 @@ using namespace std;
 // --------------------------------------------------------------------------
 
 //DRONE use => 1, not => 0
-#define USE_DRONE 0
+#define USE_DRONE 1
 
 Drone ardrone;
 ImageProcess ImgProc;
@@ -70,17 +70,19 @@ int main(int argc, char *argv[])
 		//cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
 		//cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
 
-		/*制御部分*/
-		/*
-			.......
-		*/
-		//cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
-		ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
+
+		//円検出して中心座標をposに代入
+		cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
+		//オプティカルフローから移動物体の速度を計算
+		cv::Point2f vel = ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
+
 		//BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
 		//BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//ardroneの速度パラメータ変更
 
-		//ardrone.brain(pos, cv::Point2f(0,0), curr_img);
+		//ドローンの制御部
+		//オプティカルフローは未完成なので速度は(0,0)を渡してる
+		ardrone.brain(pos, cv::Point2f(0,0), curr_img);
 		
 
 		//defaultの動きをする
