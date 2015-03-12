@@ -14,7 +14,7 @@ using namespace std;
 // --------------------------------------------------------------------------
 
 //DRONE use => 1, not => 0
-#define USE_DRONE 1
+#define USE_DRONE 0
 
 Drone ardrone;
 ImageProcess ImgProc;
@@ -73,9 +73,11 @@ int main(int argc, char *argv[])
 
 		//円検出して中心座標をposに代入
 		cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
-		//オプティカルフローから移動物体の速度を計算
-		cv::Point2f vel = ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
-
+		if (pos != cv::Point2f(-1, -1)){
+			//オプティカルフローから移動物体の速度を計算
+			cv::Point2f vel = ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
+			prev_img = curr_img;
+		}
 		//BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
 		//BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//ardroneの速度パラメータ変更
@@ -102,7 +104,6 @@ int main(int argc, char *argv[])
 		//cv::imshow("processed_image2", processed_image2);
 		//cv::imshow("processed_image3", processed_image3);
 		//cv::imshow("processed_image4", processed_image4);
-		prev_img = curr_img;
 		if (!ardrone.getAvailable()){
 			if (waitKey(30) >= 0) break;
 		}
