@@ -1,5 +1,6 @@
 #include "ardrone/ardrone.h"
 #include "ardrone/drone.h"
+#include "ardrone\piddrone.h"
 #include "imageprocess.h"
 #include "Car.h"
 #include <ctime>
@@ -14,13 +15,11 @@ using namespace std;
 // --------------------------------------------------------------------------
 
 //DRONE use => 1, not => 0
-#define USE_DRONE 0
+#define USE_DRONE 1
 
-Drone ardrone;
+PIDDrone ardrone;
 ImageProcess ImgProc;
 Car BrackCircleCar;
-
-
 
 //初期化処理
 void InitProcess(){
@@ -42,7 +41,6 @@ cv::Mat getImage(){
 		return cv::Mat();
 	}
 }
-
 int main(int argc, char *argv[])
 {
 	//debug用
@@ -59,35 +57,41 @@ int main(int argc, char *argv[])
 	while (1) {
 		//ループごとにdroneの画像を取得
 		curr_img = getImage();
-
 		/*画像処理の部分*/
-
+		ardrone.setParameters(0, 0, 0, 0);
 		//オプティカルフロー
-		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
+		cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		//顔検出
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
 		//cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
 		//cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
-
+		double sensor_vx, sensor_vy, sensor_vz;
+		ardrone.getVelocity(&sensor_vx, &sensor_vy, &sensor_vz);
+		std::cerr << sensor_vx << " " << sensor_vy << std::endl;
 
 		//円検出して中心座標をposに代入
-		cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
+		/*cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
 		if (pos != cv::Point2f(-1, -1)){
 			//オプティカルフローから移動物体の速度を計算
 			cv::Point2f vel = ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
 			prev_img = curr_img;
+			// 検出された円の中心を描画
+			
 		}
+		cv::circle(curr_img, pos, 3, CV_RGB(0, 255, 0), -1, 8, 0);
+		ardrone.PIDControl(cv::Point2f(pos.y, pos.x));
+		*/
 		//BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
 		//BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//ardroneの速度パラメータ変更
 
 		//ドローンの制御部
 		//オプティカルフローは未完成なので速度は(0,0)を渡してる
-		ardrone.brain(pos, cv::Point2f(0,0), curr_img);
+		//ardrone.brain(pos, cv::Point2f(0,0), curr_img);
 		
-
-		//defaultの動きをする
+		
+  		//defaultの動きをする
 		if (ardrone.getAvailable()){
 			if (ardrone.default_move() == -1)
 				break;
@@ -104,10 +108,10 @@ int main(int argc, char *argv[])
 		//cv::imshow("processed_image2", processed_image2);
 		//cv::imshow("processed_image3", processed_image3);
 		//cv::imshow("processed_image4", processed_image4);
+		prev_img = curr_img;
 		if (!ardrone.getAvailable()){
 			if (waitKey(30) >= 0) break;
 		}
 	}
-
 	return 0;
 }

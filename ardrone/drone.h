@@ -23,14 +23,17 @@ public:
 	double getvy(){ return vy; }
 	double getvz(){ return vz; }
 	double getvr(){ return vr; }
+	void setvx(double _vx){ vx = _vx; }
+	void setvy(double _vy){ vy = _vy; }
+	void setvz(double _vz){ vz = _vz; }
+	void setvr(double _vr){ vr = _vr; }
 	/*ƒpƒ‰ƒ[ƒ^‚Ì•ûŒü‚É“®‚­*/
-	void Move();
+	virtual void Move();
 	void brain(cv::Point2f pos, cv::Point2f v, cv::Mat img);
 	bool getAvailable(){
 		return available;
 	}
-	~Drone(){
-		if (available)
-			close();
+	virtual ~Drone(){
+		close();
 	}
 };
