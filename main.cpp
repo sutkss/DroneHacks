@@ -6,6 +6,7 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
+#include <list>
 using namespace std;
 
 // --------------------------------------------------------------------------
@@ -25,7 +26,6 @@ Car BrackCircleCar;
 void InitProcess(){
 	if(USE_DRONE) ardrone.initialization();
 	ImgProc.useVideoCapture();
-
 }
 
 //ドローンと接続されていたらドローンから、
@@ -41,12 +41,13 @@ cv::Mat getImage(){
 		return cv::Mat();
 	}
 }
+
 int main(int argc, char *argv[])
 {
 	//debug用
 	ofstream ofs("debug.log");
 	std::cerr.rdbuf(ofs.rdbuf());
-
+	std::cerr << "sensor_vx sensor_vy sensor_vz vel.x vel.y"<< std::endl;
 	using namespace cv;
 	InitProcess();
 
@@ -54,22 +55,33 @@ int main(int argc, char *argv[])
 	cv::Mat curr_img = getImage();
 
 	double vx=0.0, vy=0.0, vz=0.0, vr=0.0;
+	std::list<cv::Point2f> car_velocity;
 	while (1) {
 		//ループごとにdroneの画像を取得
 		curr_img = getImage();
 		/*画像処理の部分*/
 		ardrone.setParameters(0, 0, 0, 0);
 		//オプティカルフロー
-		cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
+		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
+		cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
+		if (car_velocity.size() >= 10){
+			car_velocity.pop_front();
+		}
+		//car_velocity.push_back(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
+		//cout << calcCenter(car_velocity) << endl;
+		//ImgProc.DrawLine(curr_img, pos, pos + 3*calcCenter(car_velocity));
+		cv::Point2f vel = ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
 		//顔検出
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
 		//cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
 		//cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
+		std::cout << ardrone.getAltitude() << std::endl;
 		double sensor_vx, sensor_vy, sensor_vz;
 		ardrone.getVelocity(&sensor_vx, &sensor_vy, &sensor_vz);
-		std::cerr << sensor_vx << " " << sensor_vy << std::endl;
-
+		if (pos != cv::Point2f(-1, -1) && ardrone.getAltitude() > 1.7 && ardrone.getAltitude() < 1.8){
+			std::cerr << sensor_vx << " " << sensor_vy << " " << sensor_vz << " " << vel.x << " " << vel.y << std::endl;
+		}
 		//円検出して中心座標をposに代入
 		/*cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
 		if (pos != cv::Point2f(-1, -1)){
@@ -97,6 +109,7 @@ int main(int argc, char *argv[])
 				break;
 		}
 		//ardroneのパラメータの方向に動く
+		//cout << ardrone.getvx() << ":" << ardrone.getvy() << ":" << ardrone.getvz() << endl;
 		ardrone.Move();
 		//double vx, vy;
 		//ardrone.getVelocity(&vx, &vy);
