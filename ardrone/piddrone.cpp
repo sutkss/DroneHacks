@@ -103,16 +103,16 @@ PIDDrone::PIDDrone(){
 		}
 	}
 	csvFile_x.close();
-	Ax = cv::Mat(num_x, num_x, CV_64FC1, _Ax);
-	Bx = cv::Mat(num_x, 1, CV_64FC1, _Bx);
-	Cx = cv::Mat(2, num_x, CV_64FC1, _Cx);
-	Dx = cv::Mat(2, 1, CV_64FC1, _Dx);
-	Kx = cv::Mat(1, num_x, CV_64FC1, _Kx);
-	Lx = cv::Mat(num_x, 2, CV_64FC1, _Lx);
-	Axd = cv::Mat(num_x, num_x, CV_64FC1, _Axd);
-	Bxd = cv::Mat(num_x, 1, CV_64FC1, _Bxd);
-	Kxd = cv::Mat(1, num_x, CV_64FC1, _Kxd);
-	Lxd = cv::Mat(num_x, 2, CV_64FC1, _Lxd);
+	Ax = cv::Mat(num_x, num_x, CV_64FC1, _Ax).clone();
+	Bx = cv::Mat(num_x, 1, CV_64FC1, _Bx).clone();
+	Cx = cv::Mat(2, num_x, CV_64FC1, _Cx).clone();
+	Dx = cv::Mat(2, 1, CV_64FC1, _Dx).clone();
+	Kx = cv::Mat(1, num_x, CV_64FC1, _Kx).clone();
+	Lx = cv::Mat(num_x, 2, CV_64FC1, _Lx).clone();
+	Axd = cv::Mat(num_x, num_x, CV_64FC1, _Axd).clone();
+	Bxd = cv::Mat(num_x, 1, CV_64FC1, _Bxd).clone();
+	Kxd = cv::Mat(1, num_x, CV_64FC1, _Kxd).clone();
+	Lxd = cv::Mat(num_x, 2, CV_64FC1, _Lxd).clone();
 
 	ifstream csvFile_y(para_y);
 
@@ -215,16 +215,16 @@ PIDDrone::PIDDrone(){
 
 	csvFile_y.close();
 
-	Ay = cv::Mat(num_x, num_x, CV_64FC1, _Ay);
-	By = cv::Mat(num_x, 1, CV_64FC1, _By);
-	Cy = cv::Mat(2, num_x, CV_64FC1, _Cy);
-	Dy = cv::Mat(2, 1, CV_64FC1, _Dy);
-	Ky = cv::Mat(1, num_x, CV_64FC1, _Ky);
-	Ly = cv::Mat(num_x, 2, CV_64FC1, _Ly);
-	Ayd = cv::Mat(num_x, num_x, CV_64FC1, _Ayd);
-	Byd = cv::Mat(num_x, 1, CV_64FC1, _Byd);
-	Kyd = cv::Mat(1, num_x, CV_64FC1, _Kyd);
-	Lyd = cv::Mat(num_x, 2, CV_64FC1, _Lyd);
+	Ay = cv::Mat(num_x, num_x, CV_64FC1, _Ay).clone();
+	By = cv::Mat(num_x, 1, CV_64FC1, _By).clone();
+	Cy = cv::Mat(2, num_x, CV_64FC1, _Cy).clone();
+	Dy = cv::Mat(2, 1, CV_64FC1, _Dy).clone();
+	Ky = cv::Mat(1, num_x, CV_64FC1, _Ky).clone();
+	Ly = cv::Mat(num_x, 2, CV_64FC1, _Ly).clone();
+	Ayd = cv::Mat(num_x, num_x, CV_64FC1, _Ayd).clone();
+	Byd = cv::Mat(num_x, 1, CV_64FC1, _Byd).clone();
+	Kyd = cv::Mat(1, num_x, CV_64FC1, _Kyd).clone();
+	Lyd = cv::Mat(num_x, 2, CV_64FC1, _Lyd).clone();
 
 	ifstream csvFile_z(para_z);
 
@@ -328,16 +328,16 @@ PIDDrone::PIDDrone(){
 
 	csvFile_z.close();
 
-	Az = cv::Mat(num_z, num_z, CV_64FC1, _Az);
-	Bz = cv::Mat(num_z, 1, CV_64FC1, _Bz);
-	Cz = cv::Mat(2, num_z, CV_64FC1, _Cz);
-	Dz = cv::Mat(2, 1, CV_64FC1, _Dz);
-	Kz = cv::Mat(1, num_z, CV_64FC1, _Kz);
-	Lz = cv::Mat(num_z, 2, CV_64FC1, _Lz);
-	Azd = cv::Mat(num_z, num_z, CV_64FC1, _Azd);
-	Bzd = cv::Mat(num_z, 1, CV_64FC1, _Bzd);
-	Kzd = cv::Mat(1, num_z, CV_64FC1, _Kzd);
-	Lzd = cv::Mat(num_z, 2, CV_64FC1, _Lzd);
+	Az = cv::Mat(num_z, num_z, CV_64FC1, _Az).clone();
+	Bz = cv::Mat(num_z, 1, CV_64FC1, _Bz).clone();
+	Cz = cv::Mat(2, num_z, CV_64FC1, _Cz).clone();
+	Dz = cv::Mat(2, 1, CV_64FC1, _Dz).clone();
+	Kz = cv::Mat(1, num_z, CV_64FC1, _Kz).clone();
+	Lz = cv::Mat(num_z, 2, CV_64FC1, _Lz).clone();
+	Azd = cv::Mat(num_z, num_z, CV_64FC1, _Azd).clone();
+	Bzd = cv::Mat(num_z, 1, CV_64FC1, _Bzd).clone();
+	Kzd = cv::Mat(1, num_z, CV_64FC1, _Kzd).clone();
+	Lzd = cv::Mat(num_z, 2, CV_64FC1, _Lzd).clone();
 
 	start = cv::getTickCount();
 	last = cv::getTickCount();
