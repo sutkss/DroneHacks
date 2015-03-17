@@ -391,68 +391,73 @@ cv::Point2f ImageProcess::getVelocityOpticalFlow(cv::Mat _prev, cv::Mat _curr){
 	cv::Mat prev = _prev.clone();
 	cv::Mat curr = _curr.clone();
 	cv::Mat color = _curr.clone();
+	cv::Mat optflow;
+	optflow = curr.clone();
 
 	cv::cvtColor(prev, prev, CV_BGR2GRAY);
 	cv::cvtColor(curr, curr, CV_BGR2GRAY);
 
 	cv::Point2f CircleCenter = getPosCircleDetection(_curr);
-	//	if (CircleCenter != cv::Point2f(-1, -1)){
-	std::vector<cv::Point2f> prev_pts;
-	std::vector<cv::Point2f> curr_pts;
+	if (CircleCenter != cv::Point2f(-1, -1)){
+		std::vector<cv::Point2f> prev_pts;
+		std::vector<cv::Point2f> curr_pts;
 
 
-	cv::goodFeaturesToTrack(prev, prev_pts, 50, 0.01, 5);
-	if (prev_pts.empty()) return cv::Point2f(0, 0);
+		cv::goodFeaturesToTrack(prev, prev_pts, 50, 0.01, 5);
+		if (prev_pts.empty()) return cv::Point2f(0, 0);
 
-	// Lucas-Kanadeメソッド＋画像ピラミッドに基づくオプティカルフロー
-	cv::Mat status, error;
-	cv::calcOpticalFlowPyrLK(prev, curr, prev_pts, curr_pts, status, error);
-	if (curr_pts.empty()) return cv::Point2f(0,0);
+		// Lucas-Kanadeメソッド＋画像ピラミッドに基づくオプティカルフロー
+		cv::Mat status, error;
+		cv::calcOpticalFlowPyrLK(prev, curr, prev_pts, curr_pts, status, error);
+		if (curr_pts.empty()) return cv::Point2f(0, 0);
 
-	// オプティカルフローの表示
-	cv::Mat optflow;
-	optflow = curr.clone();
-	std::vector<cv::Point2f>::const_iterator p = prev_pts.begin();
-	std::vector<cv::Point2f>::const_iterator n = curr_pts.begin();
-	std::vector<cv::Point2f> velocity;
-	std::list<cv::Point2f> clastering[4];
-	for (; n != curr_pts.end(); ++n, ++p) {
-		cv::Point2f dist = *p - *n;
-		//移動距離が著しい点は除外する
-		if (dist.ddot(dist) < 5000)
-			velocity.push_back(dist);
-	}
-	if (velocity.size() <= 10) return cv::Point2f(0, 0);
-	Kmeans2(velocity, prev_pts, clastering);
-	//面積比を用いて物体分離
-
-	if (clastering[0].size() < clastering[2].size()){
-		std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
-		std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
-		/*for (; it != clastering[0].end(); ++it, ++pt){
-			cv::line(optflow, *pt, *pt + *it*5, cv::Scalar(255, 255, 255), 2);
-			}*/
-		//cerr << calcCenter(clastering[0]) << endl;
-		if (!(calcCenter(clastering[0]).x == 0 && calcCenter(clastering[0]).y)){
-			cv::line(optflow, CircleCenter, calcCenter(clastering[0]) + CircleCenter - calcCenter(clastering[2]), cv::Scalar(255, 255, 255), 5);
-			cv::circle(optflow, calcCenter(clastering[0]) + CircleCenter, 3, CV_RGB(0, 255, 0), CV_FILLED, 8, 0);
+		// オプティカルフローの表示
+		std::vector<cv::Point2f>::const_iterator p = prev_pts.begin();
+		std::vector<cv::Point2f>::const_iterator n = curr_pts.begin();
+		std::vector<cv::Point2f> velocity;
+		std::list<cv::Point2f> clastering[4];
+		for (; n != curr_pts.end(); ++n, ++p) {
+			cv::Point2f dist = *n - *p;
+			//移動距離が著しい点は除外する
+			if (dist.ddot(dist) < 5000)
+				velocity.push_back(dist);
 		}
-		imshow("optflow", optflow);
-		return calcCenter(clastering[0]);
+		if (velocity.size() <= 10) return cv::Point2f(0, 0);
+		Kmeans2(velocity, prev_pts, clastering);
+		//面積比を用いて物体分離
+
+		if (clastering[0].size() < clastering[2].size()){
+			std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
+			std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
+			/*for (; it != clastering[0].end(); ++it, ++pt){
+				cv::line(optflow, *pt, *pt + *it*5, cv::Scalar(255, 255, 255), 2);
+				}*/
+			//cerr << calcCenter(clastering[0]) << endl;
+			if (!(calcCenter(clastering[0]).x == 0 && calcCenter(clastering[0]).y)){
+				cv::line(optflow, CircleCenter, calcCenter(clastering[0]) + CircleCenter - calcCenter(clastering[2]), cv::Scalar(255, 255, 255), 5);
+				cv::circle(optflow, calcCenter(clastering[0]) + CircleCenter, 3, CV_RGB(0, 255, 0), CV_FILLED, 8, 0);
+			}
+			imshow("optflow", optflow);
+			return calcCenter(clastering[0]);
+		}
+		else{
+			std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
+			std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
+			/*for (; itt != clastering[2].end(); ++itt, ++ptt){
+				cv::line(optflow, *ptt, *ptt + *itt*5, cv::Scalar(255, 255, 255), 2);
+				}*/
+			//cerr << calcCenter(clastering[2]) << endl;
+			if (!(calcCenter(clastering[2]).x == 0 && calcCenter(clastering[2]).y)){
+				cv::line(optflow, CircleCenter, calcCenter(clastering[2]) + CircleCenter - calcCenter(clastering[0]), cv::Scalar(255, 255, 255), 5);
+				cv::circle(optflow, calcCenter(clastering[2]) + CircleCenter, 3, CV_RGB(0, 255, 0), CV_FILLED, 8, 0);
+			}
+			imshow("optflow", optflow);
+			return calcCenter(clastering[2]);
+		}
 	}
 	else{
-		std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
-		std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
-		/*for (; itt != clastering[2].end(); ++itt, ++ptt){
-			cv::line(optflow, *ptt, *ptt + *itt*5, cv::Scalar(255, 255, 255), 2);
-			}*/
-		//cerr << calcCenter(clastering[2]) << endl;
-		if (!(calcCenter(clastering[2]).x == 0 && calcCenter(clastering[2]).y)){
-			cv::line(optflow, CircleCenter, calcCenter(clastering[2]) + CircleCenter - calcCenter(clastering[0]), cv::Scalar(255, 255, 255), 5);
-			cv::circle(optflow, calcCenter(clastering[2]) + CircleCenter, 3, CV_RGB(0, 255, 0), CV_FILLED, 8, 0);
-		}
-		imshow("optflow", optflow);
-		return calcCenter(clastering[2]);
+		cv::imshow("optflow", optflow);
+		return cv::Point2f(0, 0);
 	}
 }
 
