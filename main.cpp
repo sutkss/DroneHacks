@@ -48,6 +48,15 @@ int main(int argc, char *argv[])
 	ofstream ofs("debug.log");
 	std::cerr.rdbuf(ofs.rdbuf());
 	std::cerr << "sensor_vx sensor_vy sensor_vz vel.x vel.y"<< std::endl;
+
+	ifstream ifs("coefficients.txt");
+	double coefficients[2][2];
+	ifs >> coefficients[0][0];
+	ifs >> coefficients[0][1];
+	ifs >> coefficients[1][0];
+	ifs >> coefficients[1][1];
+	cv::Point2f recur[2] = { cv::Point2f(coefficients[0][0], coefficients[0][1]), cv::Point2f(coefficients[2][2], coefficients[2][2]) };
+
 	using namespace cv;
 	InitProcess();
 
@@ -61,34 +70,42 @@ int main(int argc, char *argv[])
 		curr_img = getImage();
 		/*画像処理の部分*/
 		ardrone.setParameters(0, 0, 0, 0);
+		if (ardrone.getAltitude() > 2.1){
+			ardrone.setvz(-0.2);
+		}
+		else if (ardrone.getAltitude() < 1.7){
+			ardrone.setvz(0.2);
+		}
 		//オプティカルフロー
 		//cv::Mat processed_image = ImgProc.OpticalFlow(prev_img, curr_img);
 		cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
 		if (car_velocity.size() >= 10){
 			car_velocity.pop_front();
 		}
+		car_velocity.push_back(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//car_velocity.push_back(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//cout << calcCenter(car_velocity) << endl;
 		//ImgProc.DrawLine(curr_img, pos, pos + 3*calcCenter(car_velocity));
 		cv::Point2f vel = ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
-		ardrone.PIDControl(cv::Point2f(pos.y, pos.x));
+
 		//顔検出
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
 		//cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
 		//cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
-		//円検出して中心座標をposに代入
-		/*cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
-		if (pos != cv::Point2f(-1, -1)){
-			//オプティカルフローから移動物体の速度を計算
-			cv::Point2f vel = ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
-			prev_img = curr_img;
-			// 検出された円の中心を描画
-			
+
+		//std::cout << ardrone.getAltitude() << std::endl;
+		double sensor_vx, sensor_vy, sensor_vz;
+		ardrone.getVelocity(&sensor_vx, &sensor_vy, &sensor_vz);
+
+		if (pos.x != -1 && pos.y != -1){
+			vel.x = vel.x + recur[0].ddot(cv::Point2f(sensor_vx, sensor_vy));
+			vel.y = vel.y + recur[1].ddot(cv::Point2f(sensor_vx, sensor_vy));
 		}
-		cv::circle(curr_img, pos, 3, CV_RGB(0, 255, 0), -1, 8, 0);
-		ardrone.PIDControl(cv::Point2f(pos.y, pos.x));
-		*/
+
+		
+		ardrone.PIDControl(cv::Point2f(pos.y, pos.x) + vel);
+		
 		//BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
 		//BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//ardroneの速度パラメータ変更
