@@ -346,9 +346,10 @@ PIDDrone::PIDDrone(){
 }
 
 void PIDDrone::PIDControl(cv::Point2f pos){
-	if (pos.x != -1 && pos.y != -1 && pos.x*pos.x+pos.y*pos.y < 5000)
+	if (pos.x != -1 && pos.y != -1 && pos.x*pos.x + pos.y*pos.y < 5000){
+		std::cout << "Chase start!!!" << std::endl;
 		piddone = 1;
-	std::cout << piddone << std::endl;
+	}
 	if (piddone == 0){
 		double x2 = pos.x;
 		double y2 = pos.y;

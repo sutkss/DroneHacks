@@ -429,13 +429,12 @@ cv::Point2f ImageProcess::getVelocityOpticalFlow(cv::Mat _prev, cv::Mat _curr){
 		if (clastering[0].size() < clastering[2].size()){
 			std::list<cv::Point2f>::const_iterator it = clastering[0].begin();
 			std::list<cv::Point2f>::const_iterator pt = clastering[1].begin();
-			/*for (; it != clastering[0].end(); ++it, ++pt){
-				cv::line(optflow, *pt, *pt + *it*5, cv::Scalar(255, 255, 255), 2);
-				}*/
+			for (; it != clastering[0].end(); ++it, ++pt){
+				cv::line(optflow, *pt, *pt + *it*2, cv::Scalar(255, 255, 255), 2);
+				}
 			//cerr << calcCenter(clastering[0]) << endl;
 			if (!(calcCenter(clastering[0]).x == 0 && calcCenter(clastering[0]).y)){
-				cv::line(optflow, CircleCenter, calcCenter(clastering[0]) + CircleCenter - calcCenter(clastering[2]), cv::Scalar(255, 255, 255), 5);
-				cv::circle(optflow, calcCenter(clastering[0]) + CircleCenter, 3, CV_RGB(0, 255, 0), CV_FILLED, 8, 0);
+				cv::line(optflow, CircleCenter, calcCenter(clastering[0]) + CircleCenter - calcCenter(clastering[2]), cv::Scalar(255, 0, 0), 5);
 			}
 			imshow("optflow", optflow);
 			return calcCenter(clastering[0]);
@@ -443,13 +442,12 @@ cv::Point2f ImageProcess::getVelocityOpticalFlow(cv::Mat _prev, cv::Mat _curr){
 		else{
 			std::list<cv::Point2f>::const_iterator itt = clastering[2].begin();
 			std::list<cv::Point2f>::const_iterator ptt = clastering[3].begin();
-			/*for (; itt != clastering[2].end(); ++itt, ++ptt){
-				cv::line(optflow, *ptt, *ptt + *itt*5, cv::Scalar(255, 255, 255), 2);
-				}*/
+			for (; itt != clastering[2].end(); ++itt, ++ptt){
+				cv::line(optflow, *ptt, *ptt + *itt*2, cv::Scalar(255, 255, 255), 2);
+				}
 			//cerr << calcCenter(clastering[2]) << endl;
 			if (!(calcCenter(clastering[2]).x == 0 && calcCenter(clastering[2]).y)){
-				cv::line(optflow, CircleCenter, calcCenter(clastering[2]) + CircleCenter - calcCenter(clastering[0]), cv::Scalar(255, 255, 255), 5);
-				cv::circle(optflow, calcCenter(clastering[2]) + CircleCenter, 3, CV_RGB(0, 255, 0), CV_FILLED, 8, 0);
+				cv::line(optflow, CircleCenter, calcCenter(clastering[2]) + CircleCenter - calcCenter(clastering[0]), cv::Scalar(255, 0, 0), 5);
 			}
 			imshow("optflow", optflow);
 			return calcCenter(clastering[2]);
