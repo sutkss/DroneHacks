@@ -483,9 +483,15 @@ void PIDDrone::PIDControl(cv::Point2f pos){
 		//	input_x3 = 0;
 		//	input_y3 = 0;
 		//}
-		//move3D2(&input_x3, &input_y3, &input_z3, &input_yaw);
-		setvx(input_x3);
-		setvy(input_y3);
+
+		input_x3 *= 2;
+		input_y3 *= 2;
+		input_z3 = 0.0;
+
+		move3D2(&input_x3, &input_y3, &input_z3, &input_yaw);
+		std::cout << input_x3 << " " << input_y3 << std::endl;
+		//setvx(input_x3);
+		//setvy(input_y3);
 		//setvz(input_z3);
 	}
 

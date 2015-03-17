@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 		curr_img = getImage();
 		/*‰æ‘œˆ—‚Ì•”•ª*/
 		ardrone.setParameters(0, 0, 0, 0);
+		cout << ardrone.getAltitude() << endl;
 		if (ardrone.getAltitude() > 2.1){
 			ardrone.setvz(-0.2);
 		}
@@ -87,6 +88,7 @@ int main(int argc, char *argv[])
 		//cout << calcCenter(car_velocity) << endl;
 		//ImgProc.DrawLine(curr_img, pos, pos + 3*calcCenter(car_velocity));
 		cv::Point2f vel = calcCenter(car_velocity);
+
 		//ŠçŒŸo
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
@@ -100,8 +102,9 @@ int main(int argc, char *argv[])
 			vel.x = vel.x + recur[0].ddot(cv::Point2f(sensor_vx, sensor_vy));
 			vel.y = vel.y + recur[1].ddot(cv::Point2f(sensor_vx, sensor_vy));
 		}
+		*/
 		
-		ardrone.PIDControl(cv::Point2f(pos.y+vel.y, pos.x+vel.x));
+		ardrone.PIDControl(cv::Point2f(pos.y, pos.x));
 		
 		//BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
 		//BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
