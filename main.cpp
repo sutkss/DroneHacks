@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 		//cout << calcCenter(car_velocity) << endl;
 		//ImgProc.DrawLine(curr_img, pos, pos + 3*calcCenter(car_velocity));
 		cv::Point2f car_meanvel = calcCenter(car_velocity);
-		cv::Point2f vel = cv::Point2f(-car_meanvel.y, -car_meanvel.x);
+		cv::Point2f vel;
 		//ŠçŒŸo
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
@@ -98,12 +98,11 @@ int main(int argc, char *argv[])
 		ardrone.getVelocity(&sensor_vx, &sensor_vy, &sensor_vz);
 
 		if (pos.x != -1 && pos.y != -1){
-			vel.x = vel.x + recur[0].ddot(cv::Point2f(sensor_vx, sensor_vy));
-			vel.y = vel.y + recur[1].ddot(cv::Point2f(sensor_vx, sensor_vy));
+			vel.x = car_meanvel.x + recur[0].ddot(cv::Point2f(sensor_vx, sensor_vy));
+			vel.y = car_meanvel.y + recur[1].ddot(cv::Point2f(sensor_vx, sensor_vy));
 		}
-
 		
-		ardrone.PIDControl(cv::Point2f(pos.y, pos.x) + vel);
+		ardrone.PIDControl(cv::Point2f(pos.y+vel.y, pos.x+vel.x));
 		
 		//BrackCircleCar.calcPosition(ImgProc.getPosCircleDetection(curr_img));
 		//BrackCircleCar.calcVelocity(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
