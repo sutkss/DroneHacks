@@ -86,8 +86,7 @@ int main(int argc, char *argv[])
 		//car_velocity.push_back(ImgProc.getVelocityOpticalFlow(prev_img, curr_img));
 		//cout << calcCenter(car_velocity) << endl;
 		//ImgProc.DrawLine(curr_img, pos, pos + 3*calcCenter(car_velocity));
-		cv::Point2f car_meanvel = calcCenter(car_velocity);
-		cv::Point2f vel;
+		cv::Point2f vel = calcCenter(car_velocity);
 		//顔検出
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
@@ -97,9 +96,9 @@ int main(int argc, char *argv[])
 		double sensor_vx, sensor_vy, sensor_vz;
 		ardrone.getVelocity(&sensor_vx, &sensor_vy, &sensor_vz);
 
-		if (pos.x != -1 && pos.y != -1){
-			vel.x = car_meanvel.x + recur[0].ddot(cv::Point2f(sensor_vx, sensor_vy));
-			vel.y = car_meanvel.y + recur[1].ddot(cv::Point2f(sensor_vx, sensor_vy));
+		if (pos.x != -1 && pos.y != -1 && abs(sensor_vx) <= 0.05 && abs(sensor_vy) <= 0.05){
+			vel.x = vel.x + recur[0].ddot(cv::Point2f(sensor_vx, sensor_vy));
+			vel.y = vel.y + recur[1].ddot(cv::Point2f(sensor_vx, sensor_vy));
 		}
 		
 		ardrone.PIDControl(cv::Point2f(pos.y+vel.y, pos.x+vel.x));
@@ -110,7 +109,7 @@ int main(int argc, char *argv[])
 
 		//ドローンの制御部
 		//オプティカルフローは未完成なので速度は(0,0)を渡してる
-		//ardrone.brain(pos, cv::Point2f(0,0), curr_img);
+		ardrone.brain(pos, vel, curr_img);
 		
 		
   		//defaultの動きをする

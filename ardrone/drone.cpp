@@ -99,8 +99,8 @@ void Drone::brain(cv::Point2f pos, cv::Point2f v, cv::Mat img){
 
 		//drone‚Ì‘¬“xŒˆ’è‚·‚é
 		//vx,vy‚Í³‹K‰»‚³‚ê‚½’l‚Å0.2‚ğmax‚Æ‚µ‚Ä‚¢‚é
-		vx = target_x / (sqrt(img.rows*img.rows/4.0) * 5);
-		vy = target_y / (sqrt(img.cols*img.cols/4.0) * 5);
+		vx = target_x / (sqrt(img.rows*img.rows/4.0) * 3);
+		vy = target_y / (sqrt(img.cols*img.cols/4.0) * 3);
 	}
 	std::cout << vx << " " << vy << std::endl;
 	setParameters(vx, vy, 0.0, 0.0);
