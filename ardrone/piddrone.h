@@ -13,6 +13,7 @@ const double ref[3] = { 0.0, 0.0, 1.7 };
 
 class PIDDrone : public Drone{
 public:
+	int piddone = 0;
 	int i = 0, j = 0;
 	int length;
 

@@ -71,17 +71,12 @@ int main(int argc, char *argv[])
 		//cout << calcCenter(car_velocity) << endl;
 		//ImgProc.DrawLine(curr_img, pos, pos + 3*calcCenter(car_velocity));
 		cv::Point2f vel = ImgProc.getVelocityOpticalFlow(prev_img, curr_img);
+		ardrone.PIDControl(cv::Point2f(pos.y, pos.x));
 		//顔検出
 		//cv::Mat processed_image1 = ImgProc.FaceDetection(curr_img);
 		//cv::Mat processed_image2 = ImgProc.Labeling(curr_img);
 		//cv::Mat processed_image3 = ImgProc.CircleDetection(curr_img);
 		//cv::Mat processed_image4 = ImgProc.LineDetection(curr_img);
-		std::cout << ardrone.getAltitude() << std::endl;
-		double sensor_vx, sensor_vy, sensor_vz;
-		ardrone.getVelocity(&sensor_vx, &sensor_vy, &sensor_vz);
-		if (pos != cv::Point2f(-1, -1) && ardrone.getAltitude() > 1.7 && ardrone.getAltitude() < 1.8){
-			std::cerr << sensor_vx << " " << sensor_vy << " " << sensor_vz << " " << vel.x << " " << vel.y << std::endl;
-		}
 		//円検出して中心座標をposに代入
 		/*cv::Point2f pos = ImgProc.getPosCircleDetection(curr_img);
 		if (pos != cv::Point2f(-1, -1)){

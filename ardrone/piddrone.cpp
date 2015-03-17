@@ -346,169 +346,178 @@ PIDDrone::PIDDrone(){
 }
 
 void PIDDrone::PIDControl(cv::Point2f pos){
-	double x2 = pos.x;
-	double y2 = pos.y;
+	if (pos.x != -1 && pos.y != -1 && pos.x*pos.x+pos.y*pos.y < 5000)
+		piddone = 1;
+	std::cout << piddone << std::endl;
+	if (piddone == 0){
+		double x2 = pos.x;
+		double y2 = pos.y;
 
-	// date取得
-	z = getAltitude();
-	double vx, vy, vz;
-	double _velocity = getVelocity(&vx, &vy, &vz);
-	cv::Mat velocity(3, 1, CV_64FC1, _velocity);
-	double pitch = getPitch();
-	double roll = getRoll();
-	double yaw = getYaw() - yaw_start;
+		// date取得
+		z = getAltitude();
+		double vx, vy, vz;
+		double _velocity = getVelocity(&vx, &vy, &vz);
+		cv::Mat velocity(3, 1, CV_64FC1, _velocity);
+		double pitch = getPitch();
+		double roll = getRoll();
+		double yaw = getYaw() - yaw_start;
 
-	// 時間
-	double time = (cv::getTickCount() - start) / cv::getTickFrequency();
+		// 時間
+		double time = (cv::getTickCount() - start) / cv::getTickFrequency();
 
-	double dt = (cv::getTickCount() - last) / cv::getTickFrequency();
-	last = cv::getTickCount();
+		double dt = (cv::getTickCount() - last) / cv::getTickFrequency();
+		last = cv::getTickCount();
 
-	if (x2 == -1 && x1 == -1){
-		x2 = x1;
-		y2 = y1;
-	}
-	else{
-		x2 = -x2 + 180;
-		y2 = y2 - 360;
-		double sigma1, sigma2, sigma3;
-		sigma1 = 2 * tan(beta) / 360 * x2*cos(pitch) + 2 * tan(alpha) / 640 * y2*sin(pitch)*sin(roll) + sin(pitch)*cos(roll);
-		sigma2 = 2 * tan(alpha) / 640 * y2*cos(roll) - sin(roll);
-		sigma3 = 2 * tan(beta) / 360 * x2*sin(pitch) - 2 * tan(alpha) / 640 * y2*cos(pitch)*sin(roll) - cos(pitch)*cos(roll);
-		h = z;
-
-		x2 = -(-d*cos(pitch) + sigma1 / sigma3*(d*sin(pitch) - h));
-		y2 = -(sigma2 / sigma3*(d*sin(pitch) - h));
-	}
-	
-	x1 = x2;
-	y1 = y2;
-
-	// Rotation matrices
-	double _RX[] = { 1.0, 0.0, 0.0,
-		0.0, cos(roll), sin(roll),
-		0.0, -sin(roll), cos(roll) };
-	double _RY[] = { cos(pitch), 0.0, -sin(pitch),
-		0.0, 1.0, 0.0,
-		sin(pitch), 0.0, cos(pitch) };
-	double _RZ[] = { cos(0), -sin(0), 0.0,
-		sin(0), cos(0), 0.0,
-		0.0, 0.0, 1.0 };
-	cv::Mat RX(3, 3, CV_64FC1, _RX);
-	cv::Mat RY(3, 3, CV_64FC1, _RY);
-	cv::Mat RZ(3, 3, CV_64FC1, _RZ);
-
-	// 速度の計算（絶対座標系）
-	double _V[] = { vx, vy, vz };
-	cv::Mat V(3, 1, CV_64FC1, _V);
-	V = RX*RY*RZ*V;
-
-	// Dead reckoning
-	_P = _P + (V + V_last) / 2 * dt;
-
-	V_last = V;
-
-	//double _output_x[] = { V.at<double>(0, 0), _P.at<double>(0, 0) };
-	double _output_x[] = { V.at<double>(0, 0), x2 };
-	cv::Mat output_x3(2, 1, CV_64FC1, _output_x);
-
-	//double _output_y[] = { V.at<double>(1, 0), _P.at<double>(1, 0) };
-	double _output_y[] = { V.at<double>(1, 0), y2 };
-	cv::Mat output_y3(2, 1, CV_64FC1, _output_y);
-
-	double _output_z[] = { V.at<double>(2, 0), z - ref[2] };
-	cv::Mat output_z3(2, 1, CV_64FC1, _output_z);
-
-	if (fabs(_output_z[1]) < 0.03){
-		Mode = 1;
-	}
-
-
-	cv::Mat _input_x = cv::Mat::zeros(1, 1, CV_64FC1);
-	cv::Mat _input_y = cv::Mat::zeros(1, 1, CV_64FC1);
-	cv::Mat _input_z = cv::Mat::zeros(1, 1, CV_64FC1);
-
-	//// 連続時間の状態推定（4次のRunge-Kutta法による状態方程式の数値計算）
-	//k1 = (Ax - Lx*Cx)*state_est_x1 + Bx*input_x1 + Lx*output_x1;
-	//k2 = (Ax - Lx*Cx)*(state_est_x1 + dt*k1) + Bx*input_x2 + Lx*output_x2;
-	//k3 = (Ax - Lx*Cx)*(state_est_x1 + dt*k2) + Bx*input_x2 + Lx*output_x2;
-	//k4 = (Ax - Lx*Cx)*(state_est_x1 + 2 * dt*k3) + Bx*input_x3 + Lx*output_x3;
-	//state_est_x3 = state_est_x1 + dt / 3 * (k1 + 2 * k2 + 2 * k3 + k4);
-
-
-	//k1 = (Ay - Ly*Cy)*state_est_y1 + By*input_y1 + Ly*output_y1;
-	//k2 = (Ay - Ly*Cy)*(state_est_y1 + dt*k1) + By*input_y2 + Ly*output_y2;
-	//k3 = (Ay - Ly*Cy)*(state_est_y1 + dt*k2) + By*input_y2 + Ly*output_y2;
-	//k4 = (Ay - Ly*Cy)*(state_est_y1 + 2 * dt*k3) + By*input_y3 + Ly*output_y3;
-	//state_est_y3 = state_est_y1 + dt / 3 * (k1 + 2 * k2 + 2 * k3 + k4);
-
-	//k1z = (Az - Lz*Cz)*state_est_z1 + Bz*input_z1 + Lz*output_z1;
-	//k2z = (Az - Lz*Cz)*(state_est_z1 + dt*k1z) + Bz*input_z2 + Lz*output_z2;
-	//k3z = (Az - Lz*Cz)*(state_est_z1 + dt*k2z) + Bz*input_z2 + Lz*output_z2;
-	//k4z = (Az - Lz*Cz)*(state_est_z1 + 2 * dt*k3z) + Bz*input_z3 + Lz*output_z3;
-	//state_est_z3 = state_est_z1 + dt / 3 * (k1z + 2 * k2z + 2 * k3z + k4z);
-
-	// 離散時間の状態推定
-	state_est_x3 = (Axd - Lxd*Cx)*state_est_x2 + Lxd*output_x3 + Bxd*input_x3;
-	state_est_y3 = (Ayd - Lyd*Cy)*state_est_y2 + Lyd*output_y3 + Byd*input_y3;
-	state_est_z3 = (Azd - Lzd*Cz)*state_est_z2 + Lzd*output_z3 + Bzd*input_z3;
-
-
-
-	// Move
-	if (!onGround() && z > 0.6){
-		////// 連続時間モデルにおける入力
-		//_input_x = -Kx*state_est_x3*Mode;
-		//_input_y = -Ky*state_est_y3*Mode;
-		//_input_z = -Kz*state_est_z3;
-
-		// 離散時間モデルにおける入力
-		_input_x = -Kxd*state_est_x3*(double)Mode;
-		_input_y = -Kyd*state_est_y3*(double)Mode;
-		_input_z = -Kzd*state_est_z3;
-
-		input_x3 = _input_x.at<double>(0, 0);
-		input_y3 = _input_y.at<double>(0, 0);
-		input_z3 = _input_z.at<double>(0, 0);
-		input_yaw = 0;
-
-		if (fabs(input_x3) > 0.08){
-			input_x3 = input_x3 / fabs(input_x3)*0.08;
+		if (x2 == -1 && x1 == -1){
+			x2 = x1;
+			y2 = y1;
 		}
-		if (fabs(input_y3) > 0.08){
-			input_y3 = input_y3 / fabs(input_y3)*0.08;
+		else{
+			x2 = -x2 + 180;
+			y2 = y2 - 360;
+			double sigma1, sigma2, sigma3;
+			sigma1 = 2 * tan(beta) / 360 * x2*cos(pitch) + 2 * tan(alpha) / 640 * y2*sin(pitch)*sin(roll) + sin(pitch)*cos(roll);
+			sigma2 = 2 * tan(alpha) / 640 * y2*cos(roll) - sin(roll);
+			sigma3 = 2 * tan(beta) / 360 * x2*sin(pitch) - 2 * tan(alpha) / 640 * y2*cos(pitch)*sin(roll) - cos(pitch)*cos(roll);
+			h = z;
+
+			x2 = -(-d*cos(pitch) + sigma1 / sigma3*(d*sin(pitch) - h));
+			y2 = -(sigma2 / sigma3*(d*sin(pitch) - h));
 		}
 
-		//if (sqrt(_output_x[1] * _output_x[1] + _output_y[1] * _output_y[1]) < 0.1){
-		//	input_x3 = 0;
-		//	input_y3 = 0;
-		//}
-		move3D2(&input_x3, &input_y3, &input_z3, &input_yaw);
-		//setvx(input_x3);
-		//setvy(input_y3);
-		//setvz(input_z3);
+		x1 = x2;
+		y1 = y2;
+
+		// Rotation matrices
+		double _RX[] = { 1.0, 0.0, 0.0,
+			0.0, cos(roll), sin(roll),
+			0.0, -sin(roll), cos(roll) };
+		double _RY[] = { cos(pitch), 0.0, -sin(pitch),
+			0.0, 1.0, 0.0,
+			sin(pitch), 0.0, cos(pitch) };
+		double _RZ[] = { cos(0), -sin(0), 0.0,
+			sin(0), cos(0), 0.0,
+			0.0, 0.0, 1.0 };
+		cv::Mat RX(3, 3, CV_64FC1, _RX);
+		cv::Mat RY(3, 3, CV_64FC1, _RY);
+		cv::Mat RZ(3, 3, CV_64FC1, _RZ);
+
+		// 速度の計算（絶対座標系）
+		double _V[] = { vx, vy, vz };
+		cv::Mat V(3, 1, CV_64FC1, _V);
+		V = RX*RY*RZ*V;
+
+		// Dead reckoning
+		_P = _P + (V + V_last) / 2 * dt;
+
+		V_last = V;
+
+		//double _output_x[] = { V.at<double>(0, 0), _P.at<double>(0, 0) };
+		double _output_x[] = { V.at<double>(0, 0), x2 };
+		cv::Mat output_x3(2, 1, CV_64FC1, _output_x);
+
+		//double _output_y[] = { V.at<double>(1, 0), _P.at<double>(1, 0) };
+		double _output_y[] = { V.at<double>(1, 0), y2 };
+		cv::Mat output_y3(2, 1, CV_64FC1, _output_y);
+
+		double _output_z[] = { V.at<double>(2, 0), z - ref[2] };
+		cv::Mat output_z3(2, 1, CV_64FC1, _output_z);
+
+		if (fabs(_output_z[1]) < 0.03){
+			Mode = 1;
+		}
+
+
+		cv::Mat _input_x = cv::Mat::zeros(1, 1, CV_64FC1);
+		cv::Mat _input_y = cv::Mat::zeros(1, 1, CV_64FC1);
+		cv::Mat _input_z = cv::Mat::zeros(1, 1, CV_64FC1);
+
+		//// 連続時間の状態推定（4次のRunge-Kutta法による状態方程式の数値計算）
+		//k1 = (Ax - Lx*Cx)*state_est_x1 + Bx*input_x1 + Lx*output_x1;
+		//k2 = (Ax - Lx*Cx)*(state_est_x1 + dt*k1) + Bx*input_x2 + Lx*output_x2;
+		//k3 = (Ax - Lx*Cx)*(state_est_x1 + dt*k2) + Bx*input_x2 + Lx*output_x2;
+		//k4 = (Ax - Lx*Cx)*(state_est_x1 + 2 * dt*k3) + Bx*input_x3 + Lx*output_x3;
+		//state_est_x3 = state_est_x1 + dt / 3 * (k1 + 2 * k2 + 2 * k3 + k4);
+
+
+		//k1 = (Ay - Ly*Cy)*state_est_y1 + By*input_y1 + Ly*output_y1;
+		//k2 = (Ay - Ly*Cy)*(state_est_y1 + dt*k1) + By*input_y2 + Ly*output_y2;
+		//k3 = (Ay - Ly*Cy)*(state_est_y1 + dt*k2) + By*input_y2 + Ly*output_y2;
+		//k4 = (Ay - Ly*Cy)*(state_est_y1 + 2 * dt*k3) + By*input_y3 + Ly*output_y3;
+		//state_est_y3 = state_est_y1 + dt / 3 * (k1 + 2 * k2 + 2 * k3 + k4);
+
+		//k1z = (Az - Lz*Cz)*state_est_z1 + Bz*input_z1 + Lz*output_z1;
+		//k2z = (Az - Lz*Cz)*(state_est_z1 + dt*k1z) + Bz*input_z2 + Lz*output_z2;
+		//k3z = (Az - Lz*Cz)*(state_est_z1 + dt*k2z) + Bz*input_z2 + Lz*output_z2;
+		//k4z = (Az - Lz*Cz)*(state_est_z1 + 2 * dt*k3z) + Bz*input_z3 + Lz*output_z3;
+		//state_est_z3 = state_est_z1 + dt / 3 * (k1z + 2 * k2z + 2 * k3z + k4z);
+
+		// 離散時間の状態推定
+		state_est_x3 = (Axd - Lxd*Cx)*state_est_x2 + Lxd*output_x3 + Bxd*input_x3;
+		state_est_y3 = (Ayd - Lyd*Cy)*state_est_y2 + Lyd*output_y3 + Byd*input_y3;
+		state_est_z3 = (Azd - Lzd*Cz)*state_est_z2 + Lzd*output_z3 + Bzd*input_z3;
+
+
+
+		// Move
+		if (!onGround() && z > 0.6){
+			////// 連続時間モデルにおける入力
+			//_input_x = -Kx*state_est_x3*Mode;
+			//_input_y = -Ky*state_est_y3*Mode;
+			//_input_z = -Kz*state_est_z3;
+
+			// 離散時間モデルにおける入力
+			_input_x = -Kxd*state_est_x3*(double)Mode;
+			_input_y = -Kyd*state_est_y3*(double)Mode;
+			_input_z = -Kzd*state_est_z3;
+
+			input_x3 = _input_x.at<double>(0, 0);
+			input_y3 = _input_y.at<double>(0, 0);
+			input_z3 = _input_z.at<double>(0, 0);
+			input_yaw = 0;
+
+			if (fabs(input_x3) > 0.08){
+				input_x3 = input_x3 / fabs(input_x3)*0.08;
+			}
+			if (fabs(input_y3) > 0.08){
+				input_y3 = input_y3 / fabs(input_y3)*0.08;
+			}
+			if (z < 1.7)
+				input_z2 = 0.3;
+			if (z > 2.1)
+				input_z3 = -0.3;
+
+			//if (sqrt(_output_x[1] * _output_x[1] + _output_y[1] * _output_y[1]) < 0.1){
+			//	input_x3 = 0;
+			//	input_y3 = 0;
+			//}
+			move3D2(&input_x3, &input_y3, &input_z3, &input_yaw);
+			//setvx(input_x3);
+			//setvy(input_y3);
+			//setvz(input_z3);
+		}
+
+		state_est_x1 = state_est_x2;
+		state_est_x2 = state_est_x3;
+		output_x1 = output_x2;
+		output_x2 = output_x3;
+		input_x1 = input_x2;
+		input_x2 = input_x3;
+
+		state_est_y1 = state_est_y2;
+		state_est_y2 = state_est_y3;
+		output_y1 = output_y2;
+		output_y2 = output_y3;
+		input_y1 = input_y2;
+		input_y2 = input_y3;
+
+		state_est_z1 = state_est_z2;
+		state_est_z2 = state_est_z3;
+		output_z1 = output_z2;
+		output_z2 = output_z3;
+		input_z1 = input_z2;
+		input_z2 = input_z3;
 	}
-
-	state_est_x1 = state_est_x2;
-	state_est_x2 = state_est_x3;
-	output_x1 = output_x2;
-	output_x2 = output_x3;
-	input_x1 = input_x2;
-	input_x2 = input_x3;
-
-	state_est_y1 = state_est_y2;
-	state_est_y2 = state_est_y3;
-	output_y1 = output_y2;
-	output_y2 = output_y3;
-	input_y1 = input_y2;
-	input_y2 = input_y3;
-
-	state_est_z1 = state_est_z2;
-	state_est_z2 = state_est_z3;
-	output_z1 = output_z2;
-	output_z2 = output_z3;
-	input_z1 = input_z2;
-	input_z2 = input_z3;
 }
 
 void PIDDrone::move3D2(double* vx, double* vy, double* vz, double* vr)
